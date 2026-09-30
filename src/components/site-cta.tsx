@@ -6,7 +6,7 @@ import { Cta } from "@/components/cta";
 export function SiteCta() {
   const pathname = usePathname();
 
-  if (pathname === "/contact") return null;
+  if (pathname === "/contact" || pathname.startsWith("/admin")) return null;
 
   return <Cta />;
 }

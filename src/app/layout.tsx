@@ -1,9 +1,6 @@
 import type { Metadata } from "next";
-import { Suspense } from "react";
-import { Footer } from "@/components/footer";
-import { SiteCta } from "@/components/site-cta";
 import { MenuProvider } from "@/components/menu";
-import { Navbar } from "@/components/navbar";
+import { SiteFrame } from "@/components/site-frame";
 import { bespoke, inter, spaceGrotesk, tanker } from "@/lib/fonts";
 import "./globals.css";
 
@@ -70,15 +67,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="font-inter">
         <MenuProvider>
-          <div className="site-background" aria-hidden />
-          <div className="site-content flex min-h-dvh flex-col">
-            <Navbar />
-            <div className="mx-auto w-full max-w-[1380px] flex-1">{children}</div>
-            <Suspense fallback={null}>
-              <SiteCta />
-            </Suspense>
-            <Footer />
-          </div>
+          <SiteFrame>{children}</SiteFrame>
         </MenuProvider>
       </body>
     </html>
