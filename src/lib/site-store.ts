@@ -32,6 +32,23 @@ export type ContactMessage = {
   createdAt: string;
 };
 
+function isReadOnlyDisk(error: unknown) {
+  const code =
+    error && typeof error === "object" && "code" in error
+      ? String((error as { code: unknown }).code)
+      : "";
+  return code === "ENOENT" || code === "EROFS" || code === "EACCES" || code === "EPERM";
+}
+
+async function writeLocalFile(filePath: string, contents: string) {
+  try {
+    await mkdir(path.dirname(filePath), { recursive: true });
+    await writeFile(filePath, contents);
+  } catch (error) {
+    if (!isReadOnlyDisk(error)) throw error;
+  }
+}
+
 async function readFileContent() {
   try {
     const raw = await readFile(contentPath, "utf8");
@@ -55,33 +72,38 @@ export async function readSiteContent() {
 
 export async function writeSiteContent(content: AdminContent) {
   const cleaned = withoutMockCases(content);
-  await mkdir(path.dirname(contentPath), { recursive: true });
-  await writeFile(contentPath, JSON.stringify(cleaned));
-
   const token = await getAdminIdToken();
   if (!token) throw new Error("Sign in again.");
 
   const stored = await storeContentImages(cleaned);
   await writeFirestoreContent(stored, token);
-  await writeFile(contentPath, JSON.stringify(stored));
+  await writeLocalFile(contentPath, JSON.stringify(stored));
   return stored;
 }
 
 export async function saveContactMessage(message: ContactMessage) {
-  await mkdir(path.dirname(messagesPath), { recursive: true });
-  let messages: ContactMessage[] = [];
+  let storedLocally = false;
   try {
-    messages = JSON.parse(await readFile(messagesPath, "utf8")) as ContactMessage[];
-    if (!Array.isArray(messages)) messages = [];
-  } catch {
-    messages = [];
+    await mkdir(path.dirname(messagesPath), { recursive: true });
+    let messages: ContactMessage[] = [];
+    try {
+      messages = JSON.parse(await readFile(messagesPath, "utf8")) as ContactMessage[];
+      if (!Array.isArray(messages)) messages = [];
+    } catch {
+      messages = [];
+    }
+    messages.push(message);
+    await writeFile(messagesPath, JSON.stringify(messages, null, 2));
+    storedLocally = true;
+  } catch (error) {
+    if (!isReadOnlyDisk(error)) throw error;
   }
-  messages.push(message);
-  await writeFile(messagesPath, JSON.stringify(messages, null, 2));
+
   try {
     await writeFirestoreMessage(message);
   } catch (error) {
     const text = error instanceof Error ? error.message : "";
-    if (!text.includes("not created yet")) throw error;
+    if (text.includes("not created yet") && storedLocally) return;
+    throw error;
   }
 }
