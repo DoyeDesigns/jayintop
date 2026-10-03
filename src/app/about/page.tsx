@@ -19,20 +19,6 @@ const sectionTitle =
 const body =
   "text-left font-bespoke text-[16px] leading-[1.5] font-normal tracking-normal";
 
-function highlighted(text: string, highlight: string) {
-  const index = highlight ? text.toLowerCase().indexOf(highlight.toLowerCase()) : -1;
-  if (index < 0) return text;
-  return (
-    <>
-      {text.slice(0, index)}
-      <span className="text-[#F9A000]">
-        {text.slice(index, index + highlight.length)}
-      </span>
-      {text.slice(index + highlight.length)}
-    </>
-  );
-}
-
 function Paragraphs({ text, className }: { text: string; className: string }) {
   const parts = text
     .split(/\n\s*\n/)
@@ -50,7 +36,6 @@ function Paragraphs({ text, className }: { text: string; className: string }) {
 
 export default async function AboutPage() {
   const { about, testimonials } = await readSiteContent();
-  const lead = about.sections.slice(0, 2);
   const rest = about.sections.slice(2);
   const portrait = about.sections.find((section) => section.media)?.media;
   const sideImage = rest.find((section) => section.media)?.media;
@@ -62,17 +47,19 @@ export default async function AboutPage() {
     <main className="pt-16 md:pt-24">
       <div className="px-8 md:px-10">
       <h1 className="text-center font-tanker text-[40px] leading-[1.2] font-normal tracking-normal text-brand-white uppercase md:text-[80px]">
-        {highlighted(about.headline, about.highlight)}
+        I make brands look like the real thing, and products{" "}
+        <span className="text-[#F9A000]">simple to use.</span>
       </h1>
       <p className="mx-auto mt-4 max-w-[760px] text-center font-bespoke text-[20px] leading-[1.5] font-normal tracking-normal text-brand-white">
-        {about.sub}
+        I am Yinka T. Jayeola, a brand identity and product UI/UX designer. Most
+        people know me as Jayintop.
       </p>
 
       <div className="mt-14 flex flex-col items-center gap-10 md:mt-20 md:flex-row md:items-center md:gap-16">
         <div className="relative mx-auto aspect-square w-full max-w-[420px] shrink-0 overflow-hidden rounded-full md:mx-0">
           <ContentImage
             src={portrait?.src ?? "/about-yinka.png"}
-            alt={about.eyebrow || "Yinka T. Jayeola"}
+            alt="Yinka T. Jayeola"
             fill
             priority
             sizes="(min-width: 768px) 420px, 100vw"
@@ -81,15 +68,49 @@ export default async function AboutPage() {
         </div>
 
         <div className="flex w-full flex-col gap-10 text-left">
-          {lead.map((section) => (
-            <section key={section.title}>
-              <h2 className={`${sectionTitle} text-brand-white`}>{section.title}</h2>
-              <Paragraphs
-                text={section.body}
-                className={`${body} mt-4 flex flex-col gap-4 text-brand-white`}
-              />
-            </section>
-          ))}
+          <section>
+            <h2 className={`${sectionTitle} text-brand-white`}>The work</h2>
+            <div className={`${body} mt-4 flex flex-col gap-4 text-brand-white`}>
+              <p>
+                I do two things, and only two, because I would rather be
+                excellent at a pair of them than average at ten.
+              </p>
+              <p>
+                <strong className="font-bold">Brand identity.</strong> A logo, a
+                colour and type system, and clear rules for using them. Built to
+                hold up on a small label and on a shop front, and simple enough
+                that your team can apply it without calling me.
+              </p>
+              <p>
+                <strong className="font-bold">Product design.</strong> The
+                screens people actually use. Sign up, checkout, payments,
+                messaging and the design system behind them. Mostly for startups
+                in fintech, healthtech and edtech, where a confusing screen
+                costs real money.
+              </p>
+            </div>
+          </section>
+
+          <section>
+            <h2 className={`${sectionTitle} text-brand-white`}>The reason</h2>
+            <div className={`${body} mt-4 flex flex-col gap-4 text-brand-white`}>
+              <p>
+                Most design fails quietly. The logo only works on a clean
+                background. The screen looks lovely and loses customers. Nobody
+                calls it a failure. It just never earns anything back.
+              </p>
+              <p>
+                I would rather make the other kind. Work that carries your idea
+                and still does its job once real people get their hands on it.
+                That is the whole standard, and I hold every project to it.
+              </p>
+              <p>
+                The longer aim is bigger than any single job. I want to build a
+                practice worth respecting in this industry, and to give
+                something useful back to other designers along the way.
+              </p>
+            </div>
+          </section>
         </div>
       </div>
       </div>
@@ -149,18 +170,6 @@ export default async function AboutPage() {
                   </li>
                 ))}
               </ol>
-              {about.receipts.length ? (
-                <ul className="mt-10 grid grid-cols-2 gap-6">
-                  {about.receipts.map((receipt) => (
-                    <li key={`${receipt.value}-${receipt.label}`}>
-                      <p className="font-tanker text-[40px] leading-[1.2] font-normal tracking-normal">
-                        {receipt.value}
-                      </p>
-                      <p className={body}>{receipt.label}</p>
-                    </li>
-                  ))}
-                </ul>
-              ) : null}
             </section>
           </div>
         </div>
