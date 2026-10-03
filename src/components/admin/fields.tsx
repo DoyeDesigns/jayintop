@@ -2,6 +2,7 @@
 
 import { ChevronDown, ChevronUp, X } from "lucide-react";
 import { useId, useState, type ReactNode } from "react";
+import { uploadAdminImage } from "@/app/admin/content-actions";
 import { readImageFile, type AdminImage } from "@/lib/admin-content";
 import { useList } from "@/components/admin/content-provider";
 
@@ -310,7 +311,10 @@ export function ImageField({
     if (!file) return;
     setBusy(true);
     try {
-      onChange(await readImageFile(file));
+      const image = await readImageFile(file);
+      const uploaded = await uploadAdminImage(image);
+      if (!uploaded.ok) throw new Error(uploaded.error);
+      onChange(uploaded.image);
     } catch (error) {
       window.alert(error instanceof Error ? error.message : "That image could not be read.");
     } finally {

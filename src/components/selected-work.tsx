@@ -1,25 +1,28 @@
 "use client";
 
 import { ChevronDown } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import {
-  selectedWork,
-  workFilters,
-  type WorkFilter,
-  type WorkItem,
-} from "@/lib/work";
+import { ContentImage } from "@/components/content-image";
+import { matchesWorkFilter } from "@/lib/public-work";
+import type { WorkItem } from "@/lib/work";
 
 const tabClass =
   "inline-flex h-[42px] shrink-0 items-center gap-[6.66px] rounded-tl-[8px] rounded-tr-[666px] rounded-br-[666px] rounded-bl-[8px] border-b-2 pt-[8px] pb-[8px] font-tanker text-[20px] leading-[1.2] font-normal tracking-normal whitespace-nowrap uppercase";
 
-export function SelectedWork({ items = selectedWork }: { items?: WorkItem[] }) {
-  const [filter, setFilter] = useState<WorkFilter>("all");
+export function SelectedWork({
+  items,
+  filters = [],
+}: {
+  items: WorkItem[];
+  filters?: string[];
+}) {
+  const options = filters.length ? filters : ["All"];
+  const [filter, setFilter] = useState(options[0]);
   const [stuck, setStuck] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const sentinelRef = useRef<HTMLDivElement>(null);
-  const activeFilter = workFilters.find((item) => item.id === filter) ?? workFilters[0];
+  const activeFilter = options.find((item) => item === filter) ?? options[0];
 
   useEffect(() => {
     const sentinel = sentinelRef.current;
@@ -32,10 +35,9 @@ export function SelectedWork({ items = selectedWork }: { items?: WorkItem[] }) {
     return () => observer.disconnect();
   }, []);
 
-  const visible =
-    filter === "all"
-      ? items
-      : items.filter((item) => item.filters.includes(filter));
+  const visible = items.filter((item) =>
+    matchesWorkFilter(item, filter, filter === options[0]),
+  );
 
   return (
     <div className="mt-10">
@@ -56,7 +58,7 @@ export function SelectedWork({ items = selectedWork }: { items?: WorkItem[] }) {
               onClick={() => setMenuOpen((open) => !open)}
               className="flex h-10 w-full items-center justify-between rounded-[4px] border border-[#D5D7DA] bg-brand px-3 py-2 font-tanker text-[20px] leading-[1.2] font-normal tracking-normal text-brand-white uppercase"
             >
-              {activeFilter.label}
+              {activeFilter}
               <ChevronDown size={20} strokeWidth={1.75} />
             </button>
             {menuOpen ? (
@@ -72,23 +74,23 @@ export function SelectedWork({ items = selectedWork }: { items?: WorkItem[] }) {
                   aria-label="Filter projects"
                   className="absolute top-[calc(100%+8px)] right-0 left-0 z-30 overflow-hidden rounded-[4px] border border-[#D5D7DA] bg-[#1A1A1A] py-1 px-3"
                 >
-                  {workFilters.map((item) => {
-                    const active = filter === item.id;
+                  {options.map((item) => {
+                    const active = filter === item;
                     return (
-                      <li key={item.id}>
+                      <li key={item}>
                         <button
                           type="button"
                           role="option"
                           aria-selected={active}
                           onClick={() => {
-                            setFilter(item.id);
+                            setFilter(item);
                             setMenuOpen(false);
                           }}
                           className={`flex w-full pr-3 py-2 text-left font-tanker text-[20px] leading-[1.2] font-normal tracking-normal uppercase ${
                             active ? "text-brand" : "text-brand-white"
                           }`}
                         >
-                          {item.label}
+                          {item}
                         </button>
                       </li>
                     );
@@ -104,15 +106,15 @@ export function SelectedWork({ items = selectedWork }: { items?: WorkItem[] }) {
               stuck ? "md:justify-start" : "md:justify-center"
             }`}
           >
-            {workFilters.map((item) => {
-              const active = filter === item.id;
+            {options.map((item) => {
+              const active = filter === item;
               const stuckActive = stuck && active;
               return (
                 <button
-                  key={item.id}
+                  key={item}
                   type="button"
                   aria-pressed={active}
-                  onClick={() => setFilter(item.id)}
+                  onClick={() => setFilter(item)}
                   className={`${tabClass} ${
                     stuck
                       ? stuckActive
@@ -123,7 +125,7 @@ export function SelectedWork({ items = selectedWork }: { items?: WorkItem[] }) {
                         : "border-transparent pr-[12px] pl-0 text-brand-white"
                   }`}
                 >
-                  {item.label}
+                  {item}
                 </button>
               );
             })}
@@ -136,8 +138,8 @@ export function SelectedWork({ items = selectedWork }: { items?: WorkItem[] }) {
           <li key={item.id}>
             <article>
               <Link href={`/selected-work/${item.id}`} className="block">
-              <div className="relative aspect-[1380/640] overflow-hidden rounded-lg">
-                <Image
+              <div className="relative aspect-[1380/640] overflow-hidden rounded-lg bg-[#1A1A1A]">
+                <ContentImage
                   src={item.image}
                   alt=""
                   fill

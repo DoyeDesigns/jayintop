@@ -2,18 +2,21 @@ import type { Metadata } from "next";
 import { MenuProvider } from "@/components/menu";
 import { SiteFrame } from "@/components/site-frame";
 import { bespoke, inter, spaceGrotesk, tanker } from "@/lib/fonts";
+import { readSiteContent } from "@/lib/site-store";
 import "./globals.css";
 
-const description =
-  "I make brands look like the real thing, and products simple to use.";
+export async function generateMetadata(): Promise<Metadata> {
+  const { site } = await readSiteContent();
+  const title = site.metaTitle || "Jayintop";
+  const summary = site.metaDesc;
 
-export const metadata: Metadata = {
+  return {
   metadataBase: new URL("https://jayintop.com"),
   title: {
-    default: "Jayintop",
+    default: title,
     template: "%s · Jayintop",
   },
-  description,
+  description: summary,
   applicationName: "Jayintop",
   icons: {
     icon: [
@@ -38,8 +41,8 @@ export const metadata: Metadata = {
   },
   manifest: "/favicon/site.webmanifest",
   openGraph: {
-    title: "Jayintop",
-    description,
+    title,
+    description: summary,
     siteName: "Jayintop",
     type: "website",
     images: [
@@ -53,21 +56,26 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary",
-    title: "Jayintop",
-    description,
+    title,
+    description: summary,
     images: ["/favicon/android-chrome-512x512.png"],
   },
-};
+  };
+}
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  const { site, contact } = await readSiteContent();
+
   return (
     <html
       lang="en"
       className={`${inter.variable} ${tanker.variable} ${bespoke.variable} ${spaceGrotesk.variable}`}
     >
       <body className="font-inter">
-        <MenuProvider>
-          <SiteFrame>{children}</SiteFrame>
+        <MenuProvider links={site.socials}>
+          <SiteFrame links={site.socials} contact={contact}>
+            {children}
+          </SiteFrame>
         </MenuProvider>
       </body>
     </html>

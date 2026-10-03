@@ -1,10 +1,32 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import { backendStatus } from "@/app/admin/content-actions";
 import { EditorPage } from "@/components/admin/fields";
 import { useAdminContent } from "@/components/admin/content-provider";
 
+const firestoreCopy = {
+  ready: "Connected",
+  missing: "Not created in the Firebase console",
+  denied: "Created, but the security rules are blocking it",
+} as const;
+
+const cloudinaryCopy = {
+  ready: "Connected",
+  missing: "Add the Cloudinary keys to .env.local",
+  denied: "The Cloudinary keys were rejected",
+} as const;
+
 export function DashboardEditor() {
   const { content } = useAdminContent();
+  const [backend, setBackend] = useState<{
+    firestore: keyof typeof firestoreCopy;
+    cloudinary: keyof typeof cloudinaryCopy;
+  } | null>(null);
+
+  useEffect(() => {
+    backendStatus().then(setBackend);
+  }, []);
   const live = content.cases.filter((item) => item.status === "published").length;
   const missingCovers = content.cases.filter((item) => !item.cover).length;
   const emptySocials = content.site.socials.filter((link) => !link.url).length;
@@ -47,6 +69,25 @@ export function DashboardEditor() {
           </div>
         ))}
       </div>
+
+      {backend ? (
+        <section>
+          <h2 className="font-tanker text-[20px] leading-[1.2] font-semibold tracking-normal text-brand-white uppercase">
+            Connections
+          </h2>
+          <div className="mt-3 h-px bg-[#22262F]" />
+          <ul>
+            <li className="flex items-center justify-between gap-4 border-b border-[#22262F] py-5">
+              <span className="font-inter text-[16px] leading-[24px] text-brand-white">Firestore</span>
+              <span className="font-inter text-[16px] leading-[24px] text-[#94979C]">{firestoreCopy[backend.firestore]}</span>
+            </li>
+            <li className="flex items-center justify-between gap-4 border-b border-[#22262F] py-5">
+              <span className="font-inter text-[16px] leading-[24px] text-brand-white">Cloudinary</span>
+              <span className="font-inter text-[16px] leading-[24px] text-[#94979C]">{cloudinaryCopy[backend.cloudinary]}</span>
+            </li>
+          </ul>
+        </section>
+      ) : null}
 
       <section>
         <h2 className="font-tanker text-[20px] leading-[1.2] font-semibold tracking-normal text-brand-white uppercase">

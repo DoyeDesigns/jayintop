@@ -5,31 +5,15 @@ import { MarqueeRow } from "@/components/marquee-row";
 
 const marquee = "TESTIMONIALS // ".repeat(8);
 const strip = 56;
-const gap = 16;
-const step = strip + gap;
+const step = strip;
 
-const items = [
-  {
-    quote:
-      "Yinka served as our sole design partner from pre-seed through launch, delivering over 120 screens across onboarding, quotation, messaging and payments. Following an extensive user research programme, quote-to-booking conversion improved by 35%. Version 1.0 reached 10,000 downloads.",
-    name: "Nikolas Gibbons",
-    role: "Founder, FixMyBuild",
-  },
-  {
-    quote:
-      "He is patient, and therefore can produce exactly what I need at high quality. He has done a great job designing our site and I am very happy. The logo designs are professional and I will definitely be using his services again.",
-    name: "Brett Henry Murphy",
-    role: "Product Manager",
-  },
-  {
-    quote:
-      "I came to Yinka with a completely different task, but he suggested changing my initial logo first. The new one beat my original more than ten times over. I received more value than the amount I paid.",
-    name: "Design Magic",
-    role: "Powersurge",
-  },
-];
+export type HomeTestimonial = {
+  quote: string;
+  name: string;
+  role: string;
+};
 
-function CardBody({ item }: { item: (typeof items)[number] }) {
+function CardBody({ item }: { item: HomeTestimonial }) {
   return (
     <>
       <p className="font-bespoke text-[16px] leading-[1.5] font-normal tracking-normal text-brand-white">
@@ -47,7 +31,7 @@ function CardBody({ item }: { item: (typeof items)[number] }) {
   );
 }
 
-function MobileStack() {
+function MobileStack({ items }: { items: HomeTestimonial[] }) {
   const scrollerRef = useRef<HTMLDivElement>(null);
   const [height, setHeight] = useState(480);
 
@@ -93,7 +77,7 @@ function MobileStack() {
         }
 
         const hidden = Math.max(0, card.offsetHeight - strip);
-        card.style.clipPath = `inset(0 0 ${hidden}px 0 round 12px)`;
+        card.style.clipPath = `inset(0 0 ${hidden}px 0 round 12px 12px 0 0)`;
       });
     };
 
@@ -121,7 +105,7 @@ function MobileStack() {
       root.removeEventListener("scroll", onScroll);
       observer.disconnect();
     };
-  }, []);
+  }, [items]);
 
   return (
     <div
@@ -132,7 +116,7 @@ function MobileStack() {
       {items.map((item, index) => (
         <article
           key={item.name}
-          className="sticky mb-4 flex flex-col justify-between gap-12 rounded-[12px] border border-[#E9EAEB] bg-[#1A1A1A] p-8 last:mb-0"
+          className="sticky flex flex-col justify-between gap-12 rounded-[12px] border border-[#E9EAEB] bg-[#1A1A1A] p-8"
           style={{ top: index * step, zIndex: index + 1 }}
         >
           <CardBody item={item} />
@@ -142,7 +126,7 @@ function MobileStack() {
   );
 }
 
-export function HomeTestimonials() {
+export function HomeTestimonials({ items }: { items: HomeTestimonial[] }) {
   return (
     <section>
       <MarqueeRow
@@ -155,7 +139,7 @@ export function HomeTestimonials() {
       </MarqueeRow>
 
       <div className="py-16 md:py-20">
-        <MobileStack />
+        <MobileStack items={items} />
         <div className="hidden md:grid md:grid-cols-3 md:items-stretch md:gap-6">
           {items.map((item) => (
             <article

@@ -17,19 +17,19 @@ export function HelpEditor() {
       <Subsection title="What it does not do yet">
         <ol className="flex flex-col gap-4">
           <li className={item}>
-            <span className="font-medium text-brand-white">No login.</span> Anyone
-            with the link could edit. Real admins need accounts and passwords
-            handled properly.
+            <span className="font-medium text-brand-white">Login is on.</span> The
+            panel asks for a Firebase Authentication email and password. Create
+            that account in the Firebase console.
           </li>
           <li className={item}>
-            <span className="font-medium text-brand-white">Uploads work here, but only for you.</span>{" "}
-            Images are shrunk and saved in this browser, so they will not follow
-            you to another computer and they are not on the internet yet. A real
-            setup stores them on a service that serves them worldwide.
+            <span className="font-medium text-brand-white">Text saves on the server.</span>{" "}
+            The public site reads that copy. Refresh a public page after you edit
+            to see the change.
           </li>
           <li className={item}>
-            <span className="font-medium text-brand-white">Not connected to the live site.</span>{" "}
-            Editing here does not change your public pages yet.
+            <span className="font-medium text-brand-white">Images go to Cloudinary.</span>{" "}
+            Uploaded pictures are stored there, and the public site loads those
+            files.
           </li>
         </ol>
       </Subsection>

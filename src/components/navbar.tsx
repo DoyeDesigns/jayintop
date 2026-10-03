@@ -8,7 +8,7 @@ export function Navbar() {
 
   return (
     <header className="border-b border-[#C0C0C0] md:border-b-0">
-      <div className="mx-auto flex h-[93px] w-full max-w-[1380px] items-center justify-between px-8 md:h-auto md:px-10 md:py-4">
+      <div className="flex h-[93px] w-full items-center justify-between px-8 md:h-auto md:px-10 md:py-4">
         <Link href="/" className="flex items-center gap-3">
         <img
           src="/logo-orange.svg"
@@ -31,7 +31,7 @@ export function Navbar() {
 
         <div className="hidden shrink-0 items-center gap-5 md:flex">
         <a
-          href="#work"
+          href="/contact"
           className="inline-flex h-[52px] w-[154px] cursor-pointer items-center justify-center rounded-tl-[1000px] rounded-bl-[1000px] border-2 border-brand px-6 py-3 font-tanker text-[20px] leading-[1.2] font-normal tracking-normal whitespace-nowrap text-brand uppercase"
         >
           Work with me

@@ -1,9 +1,9 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
+import { ContentImage } from "@/components/content-image";
 import { useEffect, useRef, useState, type RefObject } from "react";
-import { selectedWork, type WorkItem } from "@/lib/work";
+import type { WorkItem } from "@/lib/work";
 
 const SPEED = 48;
 const rulerPhrase = "Selected work // ".repeat(8);
@@ -29,16 +29,21 @@ function ProjectCard({
         draggable={false}
         className="group relative block h-[668px] w-[494px] overflow-hidden"
       >
-        <Image
-          src={item.image}
-          alt=""
-          fill
-          sizes="494px"
-          draggable={false}
-          className="pointer-events-none object-cover"
-        />
+        {item.image ? (
+          <ContentImage
+            src={item.image}
+            alt=""
+            fill
+            sizes="494px"
+            className="pointer-events-none object-cover"
+          />
+        ) : (
+          <span className="absolute inset-0 bg-[#1A1A1A]" />
+        )}
         <span className="absolute inset-0 z-10 flex items-center justify-center bg-black/0 transition-colors duration-300 group-hover:bg-black/40 group-focus-visible:bg-black/40">
-          <span className="px-6 text-center font-inter text-[35px] leading-none font-medium text-[#DEDAD2] opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-visible:opacity-100">
+          <span
+            className={`px-6 text-center font-inter text-[35px] leading-none font-medium text-[#DEDAD2] transition-opacity duration-300 group-hover:opacity-100 group-focus-visible:opacity-100 ${item.image ? "opacity-0" : "opacity-100"}`}
+          >
             {item.title}
           </span>
         </span>
@@ -126,12 +131,8 @@ function Ruler() {
   );
 }
 
-export function HomeSelectedWorks({
-  items = selectedWork,
-}: {
-  items?: WorkItem[];
-}) {
-  const projects = items.length > 0 ? items : selectedWork;
+export function HomeSelectedWorks({ items }: { items: WorkItem[] }) {
+  const projects = items;
   const viewportRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
   const loopRef = useRef<HTMLUListElement>(null);

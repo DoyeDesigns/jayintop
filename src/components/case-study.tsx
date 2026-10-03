@@ -1,6 +1,6 @@
 import { ArrowLeft, ArrowRight } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
+import { ContentImage } from "@/components/content-image";
 import type { WorkImage, WorkItem } from "@/lib/work";
 
 const heading =
@@ -16,7 +16,7 @@ function Frame({ image, alt }: { image: WorkImage; alt: string }) {
         image.span === "full" ? "aspect-[16/9] md:col-span-2" : "aspect-[4/3]"
       }`}
     >
-      <Image
+      <ContentImage
         src={image.src}
         alt={alt}
         fill
@@ -38,16 +38,18 @@ export function CaseStudy({
 }) {
   return (
     <article className="flex flex-col gap-10">
-      <div className="relative aspect-[1380/640] overflow-hidden rounded-lg">
-        <Image
-          src={project.image}
-          alt=""
-          fill
-          priority
-          sizes="(min-width: 768px) 1120px, 100vw"
-          className="object-cover"
-        />
-      </div>
+      {project.image ? (
+        <div className="relative aspect-[1380/640] overflow-hidden rounded-lg">
+          <ContentImage
+            src={project.image}
+            alt=""
+            fill
+            priority
+            sizes="(min-width: 768px) 1120px, 100vw"
+            className="object-cover"
+          />
+        </div>
+      ) : null}
 
       {project.sections.map((section, index) => (
         <section key={section.title} className="flex flex-col gap-6">
@@ -78,11 +80,15 @@ export function CaseStudy({
             ) : null}
           </div>
 
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            {section.images.map((image, imageIndex) => (
-              <Frame key={imageIndex} image={image} alt="" />
-            ))}
-          </div>
+          {section.images.some((image) => image.src) ? (
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              {section.images
+                .filter((image) => image.src)
+                .map((image, imageIndex) => (
+                  <Frame key={imageIndex} image={image} alt="" />
+                ))}
+            </div>
+          ) : null}
         </section>
       ))}
 

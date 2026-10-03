@@ -1,22 +1,30 @@
 import type { Metadata } from "next";
 import { ContactForm } from "@/components/contact-form";
+import { readSiteContent } from "@/lib/site-store";
 
-export const metadata: Metadata = {
-  title: "Contact",
-  description: "Kindly send a message and I will reach out to you.",
-};
+export const dynamic = "force-dynamic";
 
-export default function ContactPage() {
+export async function generateMetadata(): Promise<Metadata> {
+  const { contact } = await readSiteContent();
+  return {
+    title: "Contact",
+    description: contact.body,
+  };
+}
+
+export default async function ContactPage() {
+  const { contact } = await readSiteContent();
+
   return (
     <main className="px-8 py-16 md:px-10 md:py-24">
       <h1 className="text-center font-tanker md:text-[76px] text-[40px] leading-none font-normal tracking-normal text-brand-white uppercase">
-        Contact
+        {contact.headline}
       </h1>
-      <p className="mt-3 text-center font-bespoke text-[20px] leading-[1.5] font-normal tracking-normal text-[#C7C3BB]">
-        Kindly send a message and I will reach out to you.
+      <p className="mx-auto mt-3 max-w-[640px] text-center font-bespoke text-[20px] leading-[1.5] font-normal tracking-normal text-[#C7C3BB]">
+        {contact.body}
       </p>
       <div className="mt-12">
-        <ContactForm />
+        <ContactForm label={contact.cta} />
       </div>
     </main>
   );

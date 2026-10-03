@@ -4,6 +4,7 @@ import { ChevronUp, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import { signOutAdmin } from "@/app/admin/actions";
 
 const sections = [
   {
@@ -62,7 +63,7 @@ function Brand({ onClose }: { onClose?: () => void }) {
   );
 }
 
-function AccountCard() {
+function AccountCard({ email, name }: { email: string; name: string | null }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -95,13 +96,15 @@ function AccountCard() {
     <div ref={rootRef} className="relative mt-4 shrink-0">
       {open ? (
         <div className="absolute right-0 bottom-full left-0 mb-2 rounded-xl border border-[#373A41] bg-[#1C1C1C] p-1">
-          <Link
-            href="/admin"
-            className="block rounded-lg px-3 py-2 font-inter text-[14px] leading-[20px] font-medium text-brand-white hover:bg-white/5"
-            onClick={() => setOpen(false)}
-          >
-            Sign out
-          </Link>
+          <form action={signOutAdmin}>
+            <button
+              type="submit"
+              className="block w-full cursor-pointer rounded-lg px-3 py-2 text-left font-inter text-[14px] leading-[20px] font-medium text-brand-white hover:bg-white/5"
+              onClick={() => setOpen(false)}
+            >
+              Sign out
+            </button>
+          </form>
         </div>
       ) : null}
       <button
@@ -128,11 +131,13 @@ function AccountCard() {
         </span>
         <span className="min-w-0 flex-1">
           <span className="block truncate font-inter text-[14px] leading-[18px] font-medium text-brand-white">
-            Yinka Jayeola
+            {name ?? email}
           </span>
-          <span className="mt-0.5 block truncate font-inter text-[12px] leading-[16px] font-normal text-[#94979C]">
-            hello@jayintop.com
-          </span>
+          {name ? (
+            <span className="mt-0.5 block truncate font-inter text-[12px] leading-[16px] font-normal text-[#94979C]">
+              {email}
+            </span>
+          ) : null}
         </span>
         <ChevronUp
           aria-hidden
@@ -143,7 +148,15 @@ function AccountCard() {
   );
 }
 
-export function AdminShell({ children }: { children: ReactNode }) {
+export function AdminShell({
+  children,
+  email,
+  name,
+}: {
+  children: ReactNode;
+  email: string;
+  name: string | null;
+}) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
@@ -226,7 +239,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
           ))}
         </nav>
 
-        <AccountCard />
+        <AccountCard email={email} name={name} />
       </aside>
 
       <div className="min-h-dvh min-w-0 flex-1 pt-16 md:pt-0">{children}</div>

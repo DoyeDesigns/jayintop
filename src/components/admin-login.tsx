@@ -1,8 +1,8 @@
 "use client";
 
 import Image from "next/image";
-import { useRouter } from "next/navigation";
-import { type FormEvent } from "react";
+import { useState, type FormEvent, type MouseEvent } from "react";
+import { sendAdminReset, signInAdmin } from "@/app/admin/actions";
 
 const labelClass =
   "font-inter text-[14px] leading-[20px] font-medium tracking-normal text-[#CECFD2]";
@@ -15,11 +15,28 @@ const gridMask = `url("data:image/svg+xml,${encodeURIComponent(
 )}")`;
 
 export function AdminLogin() {
-  const router = useRouter();
+  const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [pending, setPending] = useState(false);
 
-  const onSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    router.push("/admin/dashboard");
+    setPending(true);
+    setError(null);
+    setNotice(null);
+    const result = await signInAdmin(new FormData(event.currentTarget));
+    setPending(false);
+    if (result?.error) setError(result.error);
+  };
+
+  const onForgot = async (event: MouseEvent<HTMLButtonElement>) => {
+    const form = event.currentTarget.form;
+    if (!form) return;
+    setPending(true);
+    setError(null);
+    const result = await sendAdminReset(String(new FormData(form).get("email") ?? ""));
+    setPending(false);
+    setNotice(result.message);
   };
 
   return (
@@ -105,16 +122,33 @@ export function AdminLogin() {
                 </span>
                 <span className={labelClass}>Remember for 30 days</span>
               </label>
-              <button type="button" className={`cursor-pointer hover:text-brand ${labelClass}`}>
+              <button
+                type="button"
+                onClick={onForgot}
+                disabled={pending}
+                className={`cursor-pointer hover:text-brand disabled:cursor-default ${labelClass}`}
+              >
                 Forgot password
               </button>
             </div>
 
+            {error ? (
+              <p className="mt-4 font-inter text-[14px] leading-[20px] text-[#F97066]" role="alert">
+                {error}
+              </p>
+            ) : null}
+            {notice ? (
+              <p className="mt-4 font-inter text-[14px] leading-[20px] text-[#CECFD2]" role="status">
+                {notice}
+              </p>
+            ) : null}
+
             <button
               type="submit"
-              className="mt-6 h-11 w-full cursor-pointer rounded-l-none rounded-full bg-brand font-tanker text-[20px] leading-[20px] tracking-normal text-white uppercase"
+              disabled={pending}
+              className="mt-6 h-11 w-full cursor-pointer rounded-l-none rounded-full bg-brand font-tanker text-[20px] leading-[20px] tracking-normal text-white uppercase disabled:cursor-default disabled:opacity-70"
             >
-              Sign in
+              {pending ? "Please wait" : "Sign in"}
             </button>
 
             <p className="mt-8 text-center font-inter text-[14px] leading-[20px] font-normal tracking-normal text-[#94979C]">

@@ -2,6 +2,7 @@
 
 import { ChevronDown } from "lucide-react";
 import { useState, type FormEvent } from "react";
+import { submitContact } from "@/app/contact/actions";
 import { countries, defaultCountry, type Country } from "@/lib/countries";
 
 const fieldClass =
@@ -10,7 +11,7 @@ const fieldClass =
 const labelClass =
   "font-bespoke text-[16px] leading-[1.5] font-normal text-brand-white";
 
-export function ContactForm() {
+export function ContactForm({ label }: { label: string }) {
   const [country, setCountry] = useState<Country>(defaultCountry);
   const [countriesOpen, setCountriesOpen] = useState(false);
   const [firstName, setFirstName] = useState("");
@@ -18,9 +19,26 @@ export function ContactForm() {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [message, setMessage] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [sent, setSent] = useState(false);
+  const [pending, setPending] = useState(false);
 
-  function submit(event: FormEvent<HTMLFormElement>) {
+  async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    setPending(true);
+    setError(null);
+    const result = await submitContact(new FormData(event.currentTarget));
+    setPending(false);
+    if (!result.ok) {
+      setError(result.error);
+      return;
+    }
+    setSent(true);
+    setFirstName("");
+    setLastName("");
+    setEmail("");
+    setPhone("");
+    setMessage("");
   }
 
   return (
@@ -86,9 +104,9 @@ export function ContactForm() {
               {country.iso}
               <ChevronDown size={16} strokeWidth={1.5} />
             </button>
+            <input type="hidden" name="phone" value={phone ? `+${country.dial} ${phone}` : ""} />
             <input
               type="tel"
-              name="phone"
               value={phone}
               onChange={(event) => setPhone(event.target.value)}
               placeholder={country.placeholder}
@@ -146,11 +164,23 @@ export function ContactForm() {
         />
       </label>
 
+      {error ? (
+        <p className="font-bespoke text-[16px] leading-[1.5] text-[#F97066]" role="alert">
+          {error}
+        </p>
+      ) : null}
+      {sent ? (
+        <p className="font-bespoke text-[16px] leading-[1.5] text-brand-white" role="status">
+          Message sent. I will get back to you.
+        </p>
+      ) : null}
+
       <button
         type="submit"
-        className="h-[52px] cursor-pointer rounded-tr-[1000px] rounded-br-[1000px] bg-brand font-tanker text-[20px] leading-[1.2] font-normal tracking-normal text-brand-white uppercase"
+        disabled={pending}
+        className="h-[52px] cursor-pointer rounded-tr-[1000px] rounded-br-[1000px] bg-brand font-tanker text-[20px] leading-[1.2] font-normal tracking-normal text-brand-white uppercase disabled:cursor-default disabled:opacity-70"
       >
-        Send message
+        {pending ? "Sending" : label}
       </button>
     </form>
   );

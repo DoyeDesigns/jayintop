@@ -1,9 +1,14 @@
 import Link from "next/link";
-import { socials } from "@/lib/socials";
+import { linkedSocials } from "@/lib/socials";
 
-export function Footer() {
+export function Footer({
+  links = [],
+}: {
+  links?: { label: string; url: string }[];
+}) {
+  const socials = linkedSocials(links);
   return (
-    <footer className="px-6 py-8 md:px-10 w-full max-w-[1380px] mx-auto">
+    <footer className="w-full px-6 py-8 md:px-10">
       <div className="flex flex-col items-center gap-8 md:grid md:grid-cols-3 md:items-center">
         <Link
           href="/"
@@ -28,7 +33,7 @@ export function Footer() {
         <ul className="order-2 flex items-center gap-5 md:order-3 md:justify-self-end">
           {socials.map((social) => (
             <li key={social.name}>
-              <a href="#" aria-label={social.name} className="inline-flex">
+              <a href={social.href} aria-label={social.name} className="inline-flex">
                 <img src={social.src} alt="" width={24} height={24} />
               </a>
             </li>

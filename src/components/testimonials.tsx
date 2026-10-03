@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { testimonialColumns, type Testimonial } from "@/lib/testimonials";
+import type { Testimonial } from "@/lib/testimonials";
 
 const quoteClass =
   "font-bespoke text-[16px] leading-[1.5] font-normal tracking-normal text-brand-white";
@@ -45,7 +45,25 @@ function Track({ hidden = false }: { hidden?: boolean }) {
   );
 }
 
-export function Testimonials() {
+function columnsFor(items: Testimonial[]) {
+  const columns: Testimonial[][] = [[], [], []];
+  items.forEach((item, index) => {
+    columns[index % 3].push(item);
+  });
+  return columns.filter((column) => column.length > 0);
+}
+
+export function Testimonials({
+  items,
+  closeLine = "For people who want the work to actually work.",
+  closeCta = "See what I have made",
+}: {
+  items?: Testimonial[];
+  closeLine?: string;
+  closeCta?: string;
+}) {
+  const columns = items?.length ? columnsFor(items) : [];
+
   return (
     <section className="relative left-1/2 w-screen -translate-x-1/2">
       <div className="flex md:h-[100px] h-[50px] items-center overflow-hidden bg-brand text-brand-white">
@@ -55,9 +73,9 @@ export function Testimonials() {
         </div>
       </div>
 
-      <div className="mx-auto w-full max-w-[1380px] px-8 py-10 md:px-10 md:py-16">
+      <div className="w-full px-8 py-10 md:px-10 md:py-16">
         <div className="flex flex-col gap-4 md:flex-row md:items-start">
-          {testimonialColumns.map((column) => (
+          {columns.map((column) => (
             <div key={column[0].name} className="flex flex-1 flex-col gap-4">
               {column.map((item) => (
                 <TestimonialCard key={item.name} {...item} />
@@ -68,7 +86,7 @@ export function Testimonials() {
 
         <div className="hidden md:block mx-auto my-25 max-w-[760px] text-center md:mt-24">
           <h2 className="font-tanker text-[40px] leading-[1.2] font-normal tracking-normal text-brand-white uppercase md:text-[60px]">
-            For people who want the work to actually work.
+            {closeLine}
           </h2>
           <p className="mt-4 font-bespoke text-[16px] leading-[1.5] font-normal tracking-normal text-[#C7C3BB]">
             Tell me what you want to build and what it has to achieve. Every
@@ -79,7 +97,7 @@ export function Testimonials() {
             href="/selected-work"
             className="mt-8 inline-flex h-[52px] items-center justify-center rounded-full rounded-tl-none rounded-bl-none  bg-brand px-6 font-tanker text-[20px] leading-[1.2] font-normal tracking-normal text-brand-white uppercase"
           >
-            See what I have made
+            {closeCta}
           </Link>
         </div>
       </div>

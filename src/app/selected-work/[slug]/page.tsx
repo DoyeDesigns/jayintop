@@ -1,21 +1,21 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { CaseStudy } from "@/components/case-study";
-import { getProject, selectedWork } from "@/lib/work";
+import { projectNeighbors, publishedWork } from "@/lib/public-work";
+import { readSiteContent } from "@/lib/site-store";
+
+export const dynamic = "force-dynamic";
 
 type ProjectPageProps = {
   params: Promise<{ slug: string }>;
 };
 
-export function generateStaticParams() {
-  return selectedWork.map((project) => ({ slug: project.id }));
-}
-
 export async function generateMetadata({
   params,
 }: ProjectPageProps): Promise<Metadata> {
   const { slug } = await params;
-  const match = getProject(slug);
+  const content = await readSiteContent();
+  const match = projectNeighbors(publishedWork(content), slug);
 
   return {
     title: match?.project.title ?? "Selected work",
@@ -27,7 +27,8 @@ export async function generateMetadata({
 
 export default async function ProjectPage({ params }: ProjectPageProps) {
   const { slug } = await params;
-  const match = getProject(slug);
+  const content = await readSiteContent();
+  const match = projectNeighbors(publishedWork(content), slug);
   if (!match) notFound();
 
   return (

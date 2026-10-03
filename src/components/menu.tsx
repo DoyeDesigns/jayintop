@@ -9,7 +9,7 @@ import {
   type CSSProperties,
   type ReactNode,
 } from "react";
-import { socials } from "@/lib/socials";
+import { linkedSocials } from "@/lib/socials";
 
 const pages = [
   { label: "Home", href: "/" },
@@ -19,10 +19,13 @@ const pages = [
   { label: "Contact", href: "/contact" },
 ];
 
+type SocialIcon = { name: string; src: string; href: string };
+
 type MenuContextValue = {
   open: boolean;
   openMenu: () => void;
   closeMenu: () => void;
+  socials: SocialIcon[];
 };
 
 const MenuContext = createContext<MenuContextValue | null>(null);
@@ -35,8 +38,15 @@ export function useMenu() {
   return menu;
 }
 
-export function MenuProvider({ children }: { children: ReactNode }) {
+export function MenuProvider({
+  children,
+  links = [],
+}: {
+  children: ReactNode;
+  links?: { label: string; url: string }[];
+}) {
   const [open, setOpen] = useState(false);
+  const socials = linkedSocials(links);
 
   return (
     <MenuContext.Provider
@@ -44,6 +54,7 @@ export function MenuProvider({ children }: { children: ReactNode }) {
         open,
         openMenu: () => setOpen(true),
         closeMenu: () => setOpen(false),
+        socials,
       }}
     >
       <div className={open ? "h-dvh overflow-hidden" : "contents"}>{children}</div>
@@ -53,7 +64,7 @@ export function MenuProvider({ children }: { children: ReactNode }) {
 }
 
 function Menu() {
-  const { closeMenu } = useMenu();
+  const { closeMenu, socials } = useMenu();
 
   return (
     <div
@@ -112,7 +123,7 @@ function Menu() {
           <ul className="flex items-center gap-5">
             {socials.map((social) => (
               <li key={social.name}>
-                <a href="#" aria-label={social.name} className="inline-flex">
+                <a href={social.href} aria-label={social.name} className="inline-flex">
                   <span
                     className="h-6 w-6 bg-brand-white mask-(--icon) mask-center mask-no-repeat mask-contain"
                     style={{ "--icon": `url("${social.src}")` } as CSSProperties}

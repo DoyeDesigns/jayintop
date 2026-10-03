@@ -4,18 +4,17 @@ import {
   createContext,
   useContext,
   useEffect,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
+import { loadSiteContent, saveSiteContent } from "@/app/admin/content-actions";
 import {
   defaultContent,
   getAt,
-  mergeContent,
   setAt,
   type AdminContent,
 } from "@/lib/admin-content";
-
-const STORAGE_KEY = "jayintop:admin-content:v1";
 
 type AdminContentContextValue = {
   content: AdminContent;
@@ -29,26 +28,38 @@ const AdminContentContext = createContext<AdminContentContextValue | null>(null)
 export function AdminContentProvider({ children }: { children: ReactNode }) {
   const [content, setContent] = useState<AdminContent>(defaultContent);
   const [ready, setReady] = useState(false);
+  const lastError = useRef<string | null>(null);
 
   useEffect(() => {
-    const saved = window.localStorage.getItem(STORAGE_KEY);
-    if (saved) {
-      try {
-        setContent(mergeContent(defaultContent(), JSON.parse(saved)));
-      } catch {
-        setContent(defaultContent());
-      }
-    }
-    setReady(true);
+    let ignore = false;
+    loadSiteContent().then((saved) => {
+      if (ignore) return;
+      setContent(saved);
+      setReady(true);
+    });
+    return () => {
+      ignore = true;
+    };
   }, []);
 
   useEffect(() => {
     if (!ready) return;
-    try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(content));
-    } catch {
-      window.alert("This change could not be saved. Image storage is full.");
-    }
+    const timer = window.setTimeout(() => {
+      saveSiteContent(content).then((result) => {
+        if (!result.ok) {
+          if (lastError.current !== result.error) {
+            lastError.current = result.error;
+            window.alert(result.error);
+          }
+          return;
+        }
+        lastError.current = null;
+        if (JSON.stringify(result.content) !== JSON.stringify(content)) {
+          setContent(result.content);
+        }
+      });
+    }, 400);
+    return () => window.clearTimeout(timer);
   }, [content, ready]);
 
   const setPath = (path: string, value: unknown) => {

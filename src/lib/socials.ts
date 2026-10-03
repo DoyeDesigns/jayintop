@@ -7,3 +7,14 @@ export const socials = [
   { name: "Dribbble", src: "/social-icons/dribble.svg" },
   { name: "WhatsApp", src: "/social-icons/whatsapp.svg" },
 ];
+
+export function linkedSocials(links: { label: string; url: string }[]) {
+  return socials.map((social) => {
+    const match = links.find(
+      (link) =>
+        link.label.trim().toLowerCase() === social.name.toLowerCase() &&
+        link.url.trim(),
+    );
+    return { ...social, href: match?.url.trim() || "#" };
+  });
+}

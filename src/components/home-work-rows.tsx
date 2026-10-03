@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { MarqueeRow } from "@/components/marquee-row";
-import { selectedWork } from "@/lib/work";
+import type { WorkItem } from "@/lib/work";
 
 const rulerPhrase = "Selected works // ".repeat(8);
 
@@ -21,9 +21,11 @@ export function SelectedWorksRuler() {
 }
 
 export function SelectedWorksStrip({
+  items,
   direction,
   tall = false,
 }: {
+  items: WorkItem[];
   direction: "rtl" | "ltr";
   tall?: boolean;
 }) {
@@ -34,21 +36,25 @@ export function SelectedWorksStrip({
   return (
     <MarqueeRow direction={direction}>
       <ul className="flex items-center gap-3 pr-3">
-        {selectedWork.map((item) => (
+        {items.map((item) => (
           <li key={item.id} className="shrink-0">
             <Link
               href={`/selected-work/${item.id}`}
               draggable={false}
               className={`group ${cardClass}`}
             >
-              <Image
-                src={item.image}
-                alt=""
-                fill
-                sizes={tall ? "260px" : "400px"}
-                draggable={false}
-                className="pointer-events-none object-cover"
-              />
+              {item.image ? (
+                <Image
+                  src={item.image}
+                  alt=""
+                  fill
+                  sizes={tall ? "260px" : "400px"}
+                  draggable={false}
+                  className="pointer-events-none object-cover"
+                />
+              ) : (
+                <span className="absolute inset-0 bg-[#1A1A1A]" />
+              )}
               <span className="absolute inset-0 z-10 flex items-center justify-center bg-black/0 transition-colors duration-300 group-hover:bg-black/40 group-focus-visible:bg-black/40">
                 <span className="px-4 text-center font-inter text-[22px] leading-none font-medium text-[#DEDAD2] opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-visible:opacity-100 md:text-[32px]">
                   {item.title}
