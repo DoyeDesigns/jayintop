@@ -18,8 +18,12 @@ import {
 
 type AdminContentContextValue = {
   content: AdminContent;
+  dirty: boolean;
+  saving: boolean;
+  status: string | null;
   setPath: (path: string, value: unknown) => void;
   mutate: (recipe: (draft: AdminContent) => void) => void;
+  save: () => Promise<void>;
   reset: () => void;
 };
 
@@ -27,14 +31,19 @@ const AdminContentContext = createContext<AdminContentContextValue | null>(null)
 
 export function AdminContentProvider({ children }: { children: ReactNode }) {
   const [content, setContent] = useState<AdminContent>(defaultContent);
+  const [saved, setSaved] = useState("");
   const [ready, setReady] = useState(false);
-  const lastError = useRef<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [status, setStatus] = useState<string | null>(null);
+  const contentRef = useRef(content);
+  contentRef.current = content;
 
   useEffect(() => {
     let ignore = false;
-    loadSiteContent().then((saved) => {
+    loadSiteContent().then((loaded) => {
       if (ignore) return;
-      setContent(saved);
+      setContent(loaded);
+      setSaved(JSON.stringify(loaded));
       setReady(true);
     });
     return () => {
@@ -42,25 +51,31 @@ export function AdminContentProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
+  const dirty = ready && JSON.stringify(content) !== saved;
+
   useEffect(() => {
-    if (!ready) return;
-    const timer = window.setTimeout(() => {
-      saveSiteContent(content).then((result) => {
-        if (!result.ok) {
-          if (lastError.current !== result.error) {
-            lastError.current = result.error;
-            window.alert(result.error);
-          }
-          return;
-        }
-        lastError.current = null;
-        if (JSON.stringify(result.content) !== JSON.stringify(content)) {
-          setContent(result.content);
-        }
-      });
-    }, 400);
-    return () => window.clearTimeout(timer);
-  }, [content, ready]);
+    if (!dirty) return;
+    const onLeave = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+    };
+    window.addEventListener("beforeunload", onLeave);
+    return () => window.removeEventListener("beforeunload", onLeave);
+  }, [dirty]);
+
+  const save = async () => {
+    if (saving) return;
+    setSaving(true);
+    setStatus(null);
+    const result = await saveSiteContent(contentRef.current);
+    setSaving(false);
+    if (!result.ok) {
+      window.alert(result.error);
+      return;
+    }
+    setContent(result.content);
+    setSaved(JSON.stringify(result.content));
+    setStatus("Saved");
+  };
 
   const setPath = (path: string, value: unknown) => {
     setContent((current) => setAt(current, path, value));
@@ -77,7 +92,7 @@ export function AdminContentProvider({ children }: { children: ReactNode }) {
   const reset = () => {
     if (
       window.confirm(
-        "Reset all content to defaults? Everything you have written will be lost.",
+        "Reset all fields to the starter text? Click Save to publish that reset.",
       )
     ) {
       setContent(defaultContent());
@@ -85,7 +100,9 @@ export function AdminContentProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AdminContentContext.Provider value={{ content, setPath, mutate, reset }}>
+    <AdminContentContext.Provider
+      value={{ content, dirty, saving, status, setPath, mutate, save, reset }}
+    >
       {children}
     </AdminContentContext.Provider>
   );

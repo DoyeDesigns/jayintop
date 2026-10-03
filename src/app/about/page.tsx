@@ -95,7 +95,7 @@ export default async function AboutPage() {
       </div>
 
       <section className="relative left-1/2 mt-16 w-screen -translate-x-1/2 bg-[#F5F1E8] py-16 text-[#1A1A1A] md:mt-24 md:py-24">
-        <div className="flex w-full flex-col items-center gap-10 px-8 md:flex-row md:items-center md:gap-16 md:px-10">
+        <div className="flex max-w-[1380px] mx-auto flex-col items-center gap-10 px-8 md:flex-row md:items-center md:gap-16 md:px-10">
           <ContentImage
             src={sideImage?.src ?? "/about-img-2.png"}
             alt=""
@@ -108,7 +108,32 @@ export default async function AboutPage() {
             {rest.map((section) => (
               <section key={section.title}>
                 <h2 className={sectionTitle}>{section.title}</h2>
-                <Paragraphs text={section.body} className={`${body} mt-4 flex flex-col gap-4`} />
+                {section.title === "The way I work" ? (
+                  <div className={`${body} mt-4 flex flex-col gap-4`}>
+                    <p>
+                      Four steps, every time.{" "}
+                      <strong className="font-bold">
+                        Discovery, brief, creation, delivery.
+                      </strong>{" "}
+                      Nothing gets designed until we have both agreed in writing
+                      what it needs to achieve.
+                    </p>
+                    <p>
+                      Research comes before drawing. I have run more than sixty
+                      user interviews on a single project just to check a direction
+                      was worth building. I write decisions down instead of
+                      defending them in a meeting, and I show progress at agreed
+                      points rather than saving one big reveal for the end.
+                    </p>
+                    <p>
+                      Delivery means what it says. Files named and organised,
+                      accessibility handled from the first screen, and a handover
+                      your developers can build from without a follow up call.
+                    </p>
+                  </div>
+                ) : (
+                  <Paragraphs text={section.body} className={`${body} mt-4 flex flex-col gap-4`} />
+                )}
               </section>
             ))}
 

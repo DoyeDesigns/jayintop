@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useMenu } from "@/components/menu";
 
 export function Navbar() {
-  const { open, openMenu } = useMenu();
+  const { openMenu } = useMenu();
 
   return (
     <header className="border-b border-[#C0C0C0] md:border-b-0">
@@ -39,7 +39,7 @@ export function Navbar() {
         <button
           type="button"
           aria-label="Open menu"
-          aria-expanded={open}
+          aria-expanded={false}
           aria-controls="site-menu"
           onClick={openMenu}
           className="inline-flex h-[52px] w-[86px] cursor-pointer flex-col items-center justify-center gap-[6px] rounded-tr-[1000px] rounded-br-[1000px] border-2 border-brand bg-brand px-6 py-3"
@@ -52,7 +52,7 @@ export function Navbar() {
         <button
           type="button"
           aria-label="Open menu"
-          aria-expanded={open}
+          aria-expanded={false}
           aria-controls="site-menu"
           onClick={openMenu}
           className="inline-flex h-[49px] cursor-pointer flex-col items-end justify-center gap-[6px] md:hidden"

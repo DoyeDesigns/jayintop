@@ -25,8 +25,8 @@ export function HomeBelief({
       </MarqueeRow>
 
       <div className="bg-brand-white text-[#1A1A1A]">
-        <div className="flex w-full flex-col-reverse items-center gap-12 px-8 py-16 md:flex-row md:items-center md:gap-16 md:px-10 md:py-24">
-          <div className="flex w-full flex-col items-start md:max-w-[640px] md:flex-1">
+        <div className="flex w-full flex-col-reverse items-center gap-12 px-8 py-16 md:flex-row md:items-center md:justify-center md:gap-16 md:px-10 md:py-24">
+          <div className="flex w-full flex-col items-start md:w-auto md:max-w-[640px]">
             <h2 className="font-tanker text-[40px] leading-[1.2] font-normal tracking-normal uppercase md:text-[60px]">
               {eyebrow}
             </h2>
@@ -43,7 +43,7 @@ export function HomeBelief({
             </Link>
           </div>
 
-          <div className="w-full max-w-[520px] shrink-0 md:w-[46%]">
+          <div className="w-full max-w-[520px] shrink-0 md:w-[520px]">
             <Image
               src="/about-img-mobile.png"
               alt="Yinka sketching logo ideas at a desk"
