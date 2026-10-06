@@ -32,7 +32,7 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
   if (!match) notFound();
 
   return (
-    <main className="px-8 pt-10 pb-0 md:px-10 md:py-16">
+    <main className="pt-10 pb-0 md:py-16">
       <CaseStudy
         project={match.project}
         previous={match.previous}

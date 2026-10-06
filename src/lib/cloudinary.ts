@@ -35,6 +35,26 @@ export async function checkCloudinary(): Promise<CloudinaryState> {
   return "missing";
 }
 
+export async function createDirectUpload(kind: "image" | "video") {
+  const keys = config();
+  if (!keys) {
+    throw new Error(
+      "Add CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET to .env.local, then restart the dev server.",
+    );
+  }
+
+  const timestamp = String(Math.round(Date.now() / 1000));
+  const folder = "jayintop";
+  return {
+    cloudName: keys.cloudName,
+    apiKey: keys.apiKey,
+    timestamp,
+    folder,
+    signature: sign({ folder, timestamp }, keys.apiSecret),
+    kind,
+  };
+}
+
 export async function uploadStoredImage(image: AdminImage) {
   if (!image.src.startsWith("data:")) return image;
 

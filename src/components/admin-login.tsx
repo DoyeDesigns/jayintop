@@ -146,7 +146,7 @@ export function AdminLogin() {
             <button
               type="submit"
               disabled={pending}
-              className="mt-6 h-11 w-full cursor-pointer rounded-l-none rounded-full bg-brand font-tanker text-[20px] leading-[20px] tracking-normal text-white uppercase disabled:cursor-default disabled:opacity-70"
+              className="mt-6 h-11 w-full cursor-pointer rounded-l-none rounded-full bg-brand font-tanker text-[20px] leading-[20px] tracking-normal text-white uppercase transition-colors duration-200 hover:bg-brand/70 disabled:cursor-default disabled:opacity-70 disabled:hover:bg-brand"
             >
               {pending ? "Please wait" : "Sign in"}
             </button>

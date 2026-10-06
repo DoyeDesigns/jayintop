@@ -45,7 +45,7 @@ export default async function AboutPage() {
 
   return (
     <main className="pt-16 md:pt-24">
-      <div className="px-8 md:px-10">
+      <div>
       <h1 className="text-center font-tanker text-[40px] leading-[1.2] font-normal tracking-normal text-brand-white uppercase md:text-[80px]">
         I make brands look like the real thing, and products{" "}
         <span className="text-[#F9A000]">simple to use.</span>
@@ -115,8 +115,8 @@ export default async function AboutPage() {
       </div>
       </div>
 
-      <section className="relative left-1/2 mt-16 w-screen -translate-x-1/2 bg-[#F5F1E8] py-16 text-[#1A1A1A] md:mt-24 md:py-24">
-        <div className="flex max-w-[1380px] mx-auto flex-col items-center gap-10 px-8 md:flex-row md:items-center md:gap-16 md:px-10">
+      <section className="-mx-4 mt-16 bg-[#F5F1E8] py-16 text-[#1A1A1A] md:-mx-[30px] md:mt-24 md:py-24">
+        <div className="flex w-full flex-col items-center gap-10 px-4 md:flex-row md:items-center md:gap-16 md:px-[30px]">
           <ContentImage
             src={sideImage?.src ?? "/about-img-2.png"}
             alt=""

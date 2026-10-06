@@ -26,7 +26,7 @@ export function SiteFrame({
       <div className="site-background" aria-hidden />
       <div className="site-content flex min-h-dvh flex-col">
         <Navbar />
-        <div className="w-full flex-1">{children}</div>
+        <div className="mx-auto w-full max-w-[1380px] flex-1 px-4 md:px-[30px]">{children}</div>
         <Suspense fallback={null}>
           <SiteCta headline={contact.headline} body={contact.body} cta={contact.cta} />
         </Suspense>

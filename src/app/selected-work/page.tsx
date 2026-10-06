@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { SelectedWork } from "@/components/selected-work";
+import { visibleFilterLabels } from "@/lib/admin-content";
 import { publishedWork } from "@/lib/public-work";
 import { readSiteContent } from "@/lib/site-store";
 
@@ -18,7 +19,7 @@ export default async function SelectedWorkPage() {
 
   return (
     <main className="pb-16 md:pb-24">
-      <div className="px-8 pt-16 md:px-10 md:pt-24">
+      <div className="pt-16 md:pt-24">
         <h1 className="text-left font-tanker text-[40px] leading-[1.2] font-normal tracking-normal text-brand-white uppercase md:text-center md:text-[80px]">
           {content.work.title}
         </h1>
@@ -26,7 +27,7 @@ export default async function SelectedWorkPage() {
           {content.work.subtitle}
         </p>
       </div>
-      <SelectedWork items={publishedWork(content)} filters={content.work.filters} />
+      <SelectedWork items={publishedWork(content)} filters={visibleFilterLabels(content.work.filters)} />
     </main>
   );
 }

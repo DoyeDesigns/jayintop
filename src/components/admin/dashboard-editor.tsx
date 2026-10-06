@@ -34,7 +34,7 @@ export function DashboardEditor() {
   const stats = [
     { label: "Live Case Studies", value: live, highlight: true },
     { label: "Testimonials", value: content.testimonials.length },
-    { label: "Editable Pages", value: 4 },
+    { label: "Editable Pages", value: 5 },
   ];
 
   const notes = [

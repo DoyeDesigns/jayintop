@@ -29,7 +29,7 @@ function blankCase(): CaseItem {
     title: "Untitled project",
     client: "",
     role: "",
-    category: "",
+    categories: [],
     year: String(new Date().getFullYear()),
     status: "draft",
     cover: null,
@@ -117,7 +117,7 @@ export function CasesEditor() {
                   </p>
                   <p className="mt-1 font-inter text-[14px] leading-[20px] text-[#94979C]">
                     {item.client || "No client set"}
-                    {item.category ? ` · ${item.category}` : ""}
+                    {item.categories.length ? ` · ${item.categories.join(", ")}` : ""}
                     {item.year ? ` · ${item.year}` : ""}
                     {" · "}
                     <span className={statusClass[item.status]}>{statusLabel[item.status]}</span>

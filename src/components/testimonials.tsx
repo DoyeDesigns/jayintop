@@ -73,7 +73,7 @@ export function Testimonials({
         </div>
       </div>
 
-      <div className="w-full px-8 py-10 md:px-10 md:py-16">
+      <div className="mx-auto w-full max-w-[1380px] px-4 py-10 md:px-[30px] md:py-16">
         <div className="flex flex-col gap-4 md:flex-row md:items-start">
           {columns.map((column) => (
             <div key={column[0].name} className="flex flex-1 flex-col gap-4">
@@ -95,7 +95,7 @@ export function Testimonials({
           </p>
           <Link
             href="/selected-work"
-            className="mt-8 inline-flex h-[52px] items-center justify-center rounded-full rounded-tl-none rounded-bl-none  bg-brand px-6 font-tanker text-[20px] leading-[1.2] font-normal tracking-normal text-brand-white uppercase"
+            className="mt-8 inline-flex h-[52px] items-center justify-center rounded-full rounded-tl-none rounded-bl-none bg-brand px-6 font-tanker text-[20px] leading-[1.2] font-normal tracking-normal text-brand-white uppercase transition-colors duration-200 hover:bg-brand/70"
           >
             {closeCta}
           </Link>

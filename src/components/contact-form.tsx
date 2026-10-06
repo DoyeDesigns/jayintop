@@ -178,7 +178,7 @@ export function ContactForm({ label }: { label: string }) {
       <button
         type="submit"
         disabled={pending}
-        className="h-[52px] cursor-pointer rounded-tr-[1000px] rounded-br-[1000px] bg-brand font-tanker text-[20px] leading-[1.2] font-normal tracking-normal text-brand-white uppercase disabled:cursor-default disabled:opacity-70"
+        className="h-[52px] cursor-pointer rounded-tr-[1000px] rounded-br-[1000px] bg-brand font-tanker text-[20px] leading-[1.2] font-normal tracking-normal text-brand-white uppercase transition-colors duration-200 hover:bg-brand/70 disabled:cursor-default disabled:opacity-70 disabled:hover:bg-brand"
       >
         {pending ? "Sending" : label}
       </button>

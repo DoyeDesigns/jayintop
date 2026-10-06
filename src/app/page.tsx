@@ -26,7 +26,7 @@ const sideCopy =
   "font-bespoke text-[16px] leading-[1.5] font-normal tracking-normal text-brand-white";
 
 const workLinkClass =
-  "inline-flex h-[52px] items-center justify-center rounded-tl-[12px] rounded-tr-[1000px] rounded-br-[1000px] rounded-bl-[12px] border-2 border-brand bg-brand px-6 font-tanker text-[20px] leading-[1.2] font-normal tracking-normal text-brand-white uppercase";
+  "inline-flex h-[52px] items-center justify-center rounded-tl-[12px] rounded-tr-[1000px] rounded-br-[1000px] rounded-bl-[12px] bg-brand px-6 font-tanker text-[20px] leading-[1.2] font-normal tracking-normal text-brand-white uppercase transition-colors duration-200 hover:bg-brand/70";
 
 function Portrait({ priority = false }: { priority?: boolean }) {
   return (
@@ -52,7 +52,7 @@ export default async function Home() {
     : testimonials.filter((item) => item.quote.trim());
 
   return (
-    <main className="px-8 pt-16 pb-0 md:px-10 md:pt-24 md:pb-0">
+    <main className="pt-16 pb-0 md:pt-24 md:pb-0">
       <div className="flex flex-col items-center md:hidden">
         <Portrait priority />
         <div className="mt-8 flex w-full flex-col items-start text-left">

@@ -16,7 +16,7 @@ export default async function ContactPage() {
   const { contact } = await readSiteContent();
 
   return (
-    <main className="px-8 py-16 md:px-10 md:py-24">
+    <main className="py-16 md:py-24">
       <h1 className="text-center font-tanker md:text-[76px] text-[40px] leading-none font-normal tracking-normal text-brand-white uppercase">
         {contact.headline}
       </h1>

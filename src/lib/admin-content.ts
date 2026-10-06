@@ -41,12 +41,17 @@ export type ContentBlock = {
 
 export type CaseStatus = "published" | "hidden" | "draft";
 
+export type WorkFilterItem = {
+  label: string;
+  hidden: boolean;
+};
+
 export type CaseItem = {
   id: string;
   title: string;
   client: string;
   role: string;
-  category: string;
+  categories: string[];
   year: string;
   status: CaseStatus;
   cover: AdminImage | null;
@@ -57,6 +62,30 @@ export type CaseItem = {
 export type SocialLink = {
   label: string;
   url: string;
+};
+
+export type ResumeContact = {
+  text: string;
+  href: string;
+};
+
+export type ResumeEntry = {
+  title: string;
+  date: string;
+  paragraphs: string[];
+};
+
+export type ResumeSection = {
+  title: string;
+  entries: ResumeEntry[];
+};
+
+export type ResumeContent = {
+  title: string;
+  name: string;
+  role: string;
+  contacts: ResumeContact[];
+  sections: ResumeSection[];
 };
 
 export type AdminContent = {
@@ -94,13 +123,14 @@ export type AdminContent = {
   work: {
     title: string;
     subtitle: string;
-    filters: string[];
+    filters: WorkFilterItem[];
   };
   contact: {
     headline: string;
     body: string;
     cta: string;
   };
+  resume: ResumeContent;
   testimonials: TestimonialItem[];
   cases: CaseItem[];
 };
@@ -120,6 +150,145 @@ export function emptyBlock(type: ContentBlock["type"]): ContentBlock {
 
 export function createId() {
   return `c${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function defaultResume(): ResumeContent {
+  return {
+    title: "My resume",
+    name: "Yinka Jayeola",
+    role: "UI/UX Designer",
+    contacts: [
+      { text: "yinka@jayintop.com", href: "mailto:yinka@jayintop.com" },
+      { text: "linkedin.com/in/jayintop", href: "https://linkedin.com/in/jayintop" },
+      { text: "+2348137645364", href: "tel:+2348137645364" },
+    ],
+    sections: [
+      {
+        title: "Bio",
+        entries: [
+          {
+            title: "",
+            date: "",
+            paragraphs: [
+              "Dynamic Senior Product Designer with 6+ years of experience delivering user-centred enterprise solutions in fintech, govtech, healthtech, and e-commerce for clients across the UK, USA, Australia, and Nigeria. Expert in end-to-end product design (100–1,600+ screen scopes), design systems, marketplace/payment flows, and brand identity. Founder of Jayintop Studio, a productized design agency focused on scalable UI/UX and branding services that drive conversion improvements (e.g., 35%+ uplift) and support multi-million USD operations. Passionate about human-centred design that creates seamless, profitable experiences. Open to senior/lead roles in innovative global teams.",
+            ],
+          },
+        ],
+      },
+      {
+        title: "Education",
+        entries: [
+          {
+            title: "OBAFEMI AWOLOWO UNIVERSITY",
+            date: "2013 – 2020",
+            paragraphs: ["Bsc. Chemical Engineering"],
+          },
+        ],
+      },
+      {
+        title: "Experience",
+        entries: [
+          {
+            title: "FOUNDER & CREATIVE DIRECTOR, JAYINTOP STUDIO",
+            date: "01/2025 – Present · Nigeria (Remote Global)",
+            paragraphs: [
+              "Founded and scaled a productized design agency offering streamlined services in brand identity, UI/UX audits, website design, social media kits, marketing collateral, and full product development.",
+              "Delivered 25+ projects for international startups and enterprises, including enterprise dashboards and brand systems, fostering repeat business and portfolio growth in fintech/e-commerce.",
+              "Led end-to-end strategy, operations, and client delivery, emphasizing agile workflows and accessibility (WCAG AA) to enhance user engagement and business outcomes.",
+            ],
+          },
+          {
+            title: "Senior Product Design Lead (Contract), FixMyBuild (UK)",
+            date: "01/2022 – 12/2023 · UK (Remote)",
+            paragraphs: [
+              "Sole designer for a two-sided home-services marketplace; shipped v1.0 (120+ screens) from pre-seed to 10k+ downloads.",
+              "Owned onboarding, quote engine, real-time chat, Stripe escrow payments, and trust/safety features; drove 35% faster quote-to-booking conversion via 60+ user interviews and usability testing.",
+            ],
+          },
+          {
+            title: "Senior Product & Brand Identity Designer, Upwork, PeoplePerHour & Fiverr",
+            date: "01/2021 – Present · Global (Remote)",
+            paragraphs: [
+              "Top 0.1% rated across platforms; executed $15k–$80k contracts in brand identity, SaaS redesigns, and fintech dashboards for UK/US/EU clients.",
+              "Shipped 200+ projects, including luxury branding and e-commerce platforms, earning 5-star reviews for strategic depth, rapid iteration, and client-focused outcomes.",
+            ],
+          },
+          {
+            title: "SENIOR DESIGN LEAD (CONTRACT), FROSTFLOW FOODS",
+            date: "01/2025 – Present · Nigeria (Remote Global)",
+            paragraphs: [
+              "Leading design of a three-sided frozen-food e-commerce ecosystem (consumer, wholesale, retailer portals), owning unified design system, subscription flows, bulk ordering, and checkout optimization across web/mobile.",
+              "Collaborated with UK founders on remote sprints, conducting UX research to ensure WCAG AA compatibility, mobile responsiveness, and 25%+ conversion uplift in high-order-value experiences.",
+            ],
+          },
+          {
+            title: "Senior Product Designer / Design Lead, ThoughtCab Design Agency",
+            date: "12/2021 – 12/2024 · United State (Remote)",
+            paragraphs: [
+              "Led UI/UX for high-growth startups in fintech, healthtech, and edtech; owned 100–400+ screen scopes, mentoring 12+ juniors and delivering Root Diamonds, Coral Health, and Root Ally platforms.",
+              "Ensured seamless developer handoff, accessibility compliance, and iterative improvements based on analytics, contributing to live deployments with enhanced user retention.",
+            ],
+          },
+          {
+            title: "DESIGN LEAD, THOUGHTCAB DESIGN AGENCY",
+            date: "12/2021 – 12/2024 · United State (Remote)",
+            paragraphs: [
+              "Led UI/UX for high-growth startups in fintech, healthtech, and edtech; owned 100–400+ screen scopes, mentoring 12+ juniors and delivering Root Diamonds, Coral Health, and Root Ally platforms.",
+              "Ensured seamless developer handoff, accessibility compliance, and iterative improvements based on analytics, contributing to live deployments with enhanced user retention.",
+            ],
+          },
+        ],
+      },
+      {
+        title: "Skill",
+        entries: [
+          {
+            title: "RESEARCH",
+            date: "",
+            paragraphs: [
+              "User Research · Journey Mapping · Heuristic Evaluations · Accessibility Audits (WCAG 2.2+) · Information Architecture · Usability Testing",
+            ],
+          },
+          {
+            title: "CORE DESIGN",
+            date: "",
+            paragraphs: [
+              "Product Design · UI/UX Design · Design Systems · Interaction Design · Brand Identity · Creative Direction",
+            ],
+          },
+          {
+            title: "UI/UX TOOLS",
+            date: "",
+            paragraphs: [
+              "Figma (Expert) · Framer · Adobe Suite · After Effects · Miro · FigJam · Webflow · Penpot · Notion · Jira",
+            ],
+          },
+          {
+            title: "SOFT SKILLS",
+            date: "",
+            paragraphs: [
+              "· Critical Thinker · Analytical Reasoning · Remote Leadership · Attention to Detail · Receptive to Feedback · Problem Solver · Excellent Written Communication · Consistent & Honest Judgment · Empathetic",
+            ],
+          },
+        ],
+      },
+      {
+        title: "Certificates & training",
+        entries: [
+          { title: "GOOGLE UX DESIGN CERTIFICATE", date: "12/01/2025", paragraphs: [] },
+          { title: "MASTER DIGITAL PRODUCT DESIGN, UDEMY", date: "12/01/2025", paragraphs: [] },
+          { title: "ULTIMATE FIGMA MASTERCLASS, DESIGNERSHIP", date: "12/01/2025", paragraphs: [] },
+          { title: "FOUNDATIONS OF UX DESIGN, COURSERA", date: "12/01/2025", paragraphs: [] },
+          { title: "MASTER DIGITAL PRODUCT DESIGN, UDEMY", date: "12/01/2025", paragraphs: [] },
+          { title: "PROMPT ENGINEERING FOR EVERYONE, COURSERA", date: "12/01/2025", paragraphs: [] },
+          { title: "TECHNICAL WRITING FUNDAMENTALS, GOOGLE", date: "12/01/2025", paragraphs: [] },
+          { title: "AI FOR EVERYONE, ANDREW NG / COURSERA", date: "12/01/2025", paragraphs: [] },
+          { title: "ENGLISH", date: "", paragraphs: ["Native/Bilingual"] },
+          { title: "YORUBA", date: "", paragraphs: ["Native/Bilingual"] },
+        ],
+      },
+    ],
+  };
 }
 
 export function defaultContent(): AdminContent {
@@ -219,10 +388,10 @@ export function defaultContent(): AdminContent {
       subtitle:
         "A few projects taken from the first sketch through to a finished system. Open one to see how it was built.",
       filters: [
-        "All case studies",
-        "Logo and brand design",
-        "Product UI/UX",
-        "Packaging",
+        { label: "All case studies", hidden: false },
+        { label: "Logo and brand design", hidden: false },
+        { label: "Product UI/UX", hidden: false },
+        { label: "Packaging", hidden: false },
       ],
     },
     contact: {
@@ -230,6 +399,7 @@ export function defaultContent(): AdminContent {
       body: "Send a short note about the project and what it needs to achieve. If I am not the right person for it, I will say so and point you somewhere better.",
       cta: "Start a project",
     },
+    resume: defaultResume(),
     testimonials: [
       {
         quote:
@@ -304,13 +474,106 @@ export function mergeContent(base: AdminContent, saved: unknown): AdminContent {
     return incoming === undefined ? fallback : incoming;
   };
 
-  return mergeValue(base, saved) as AdminContent;
+  const merged = mergeValue(base, saved) as AdminContent;
+  return {
+    ...merged,
+    cases: merged.cases.map(normalizeCase),
+    work: { ...merged.work, filters: normalizeFilters(merged.work.filters) },
+    resume: normalizeResume(merged.resume ?? defaultResume()),
+  };
+}
+
+export function visibleFilterLabels(filters: WorkFilterItem[]) {
+  return filters
+    .filter((item, index) => (index === 0 || !item.hidden) && item.label.trim())
+    .map((item) => item.label);
+}
+
+function asText(value: unknown) {
+  return typeof value === "string" ? value : "";
+}
+
+function normalizeResume(resume: ResumeContent): ResumeContent {
+  const contacts = Array.isArray(resume?.contacts) ? resume.contacts : [];
+  const sections = Array.isArray(resume?.sections) ? resume.sections : [];
+
+  return {
+    title: asText(resume?.title),
+    name: asText(resume?.name),
+    role: asText(resume?.role),
+    contacts: contacts.map((item) => ({
+      text: asText(item?.text),
+      href: asText(item?.href),
+    })),
+    sections: sections.map((section) => ({
+      title: asText(section?.title),
+      entries: (Array.isArray(section?.entries) ? section.entries : []).map((entry) => ({
+        title: asText(entry?.title),
+        date: asText(entry?.date),
+        paragraphs: (Array.isArray(entry?.paragraphs) ? entry.paragraphs : []).filter(
+          (paragraph): paragraph is string => typeof paragraph === "string",
+        ),
+      })),
+    })),
+  };
+}
+
+function normalizeFilters(filters: unknown): WorkFilterItem[] {
+  if (!Array.isArray(filters)) return [];
+  return filters.map((item) => {
+    if (typeof item === "string") return { label: item, hidden: false };
+    if (item && typeof item === "object") {
+      const record = item as { label?: unknown; hidden?: unknown };
+      return {
+        label: typeof record.label === "string" ? record.label : "",
+        hidden: Boolean(record.hidden),
+      };
+    }
+    return { label: "", hidden: false };
+  });
+}
+
+function normalizeCase(item: CaseItem): CaseItem {
+  const raw = item as CaseItem & { category?: unknown; categories?: unknown };
+  const listed = Array.isArray(raw.categories) ? raw.categories : [];
+  const previous =
+    typeof raw.category === "string"
+      ? raw.category.split(",")
+      : Array.isArray(raw.category)
+        ? raw.category
+        : [];
+  const categories = [...listed, ...previous]
+    .filter((value): value is string => typeof value === "string")
+    .map((value) => value.trim())
+    .filter(Boolean)
+    .filter(
+      (value, index, list) =>
+        list.findIndex((other) => other.toLowerCase() === value.toLowerCase()) === index,
+    );
+
+  return {
+    id: item.id,
+    title: item.title,
+    client: item.client,
+    role: item.role,
+    categories,
+    year: item.year,
+    status: item.status,
+    cover: item.cover,
+    summary: item.summary,
+    blocks: item.blocks,
+  };
 }
 
 export function readImageFile(file: File): Promise<AdminImage> {
   const name = file.name.replace(/\.[^.]+$/, "");
 
   return new Promise((resolve, reject) => {
+    if (file.size > 9 * 1024 * 1024) {
+      reject(new Error("That image is too large. The limit is 9 MB."));
+      return;
+    }
+
     if (!file.type.startsWith("image/")) {
       reject(new Error("That is not an image file."));
       return;

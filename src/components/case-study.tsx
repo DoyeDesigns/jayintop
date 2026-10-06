@@ -9,6 +9,38 @@ const heading =
 const copy =
   "text-left font-bespoke text-[16px] leading-[1.5] font-normal tracking-normal text-brand-white";
 
+function VideoPlayer({ url, poster }: { url: string; poster?: string }) {
+  const video = videoView(url);
+  if (video.kind === "embed") {
+    return (
+      <iframe
+        src={video.src}
+        title="Case study video"
+        className="aspect-video w-full rounded-lg"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowFullScreen
+      />
+    );
+  }
+  return (
+    <video
+      src={video.src}
+      poster={poster}
+      controls
+      playsInline
+      className="aspect-video w-full rounded-lg bg-black"
+    />
+  );
+}
+
+function videoView(url: string) {
+  const youtube = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([\w-]+)/);
+  if (youtube) return { kind: "embed" as const, src: `https://www.youtube.com/embed/${youtube[1]}` };
+  const vimeo = url.match(/vimeo\.com\/(?:video\/)?(\d+)/);
+  if (vimeo) return { kind: "embed" as const, src: `https://player.vimeo.com/video/${vimeo[1]}` };
+  return { kind: "file" as const, src: url };
+}
+
 function Frame({ image, alt }: { image: WorkImage; alt: string }) {
   return (
     <div
@@ -80,6 +112,10 @@ export function CaseStudy({
             ) : null}
           </div>
 
+          {section.video ? (
+            <VideoPlayer url={section.video} poster={section.poster} />
+          ) : null}
+
           {section.images.some((image) => image.src) ? (
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               {section.images
@@ -99,14 +135,14 @@ export function CaseStudy({
         />
         <Link
           href={`/selected-work/${previous.id}`}
-          className="relative z-10 inline-flex h-[52px] min-h-[40px] items-center justify-center gap-[10px] rounded-tl-[1000px] rounded-tr-[12px] rounded-br-[12px] rounded-bl-[1000px] border-2 border-brand bg-brand px-6 py-3 font-tanker text-[16px] leading-[1.2] font-normal tracking-normal text-brand-white uppercase"
+          className="relative z-10 inline-flex h-[52px] min-h-[40px] items-center justify-center gap-[10px] rounded-tl-[1000px] rounded-tr-[12px] rounded-br-[12px] rounded-bl-[1000px] bg-brand px-6 py-3 font-tanker text-[16px] leading-[1.2] font-normal tracking-normal text-brand-white uppercase transition-colors duration-200 hover:bg-brand/70"
         >
           <ArrowLeft size={16} strokeWidth={1.75} />
           {previous.title}
         </Link>
         <Link
           href={`/selected-work/${next.id}`}
-          className="relative z-10 inline-flex h-[52px] min-h-[40px] items-center justify-center gap-[10px] rounded-tl-[12px] rounded-tr-[1000px] rounded-br-[1000px] rounded-bl-[12px] border-2 border-brand bg-brand px-6 py-3 font-tanker text-[16px] leading-[1.2] font-normal tracking-normal text-brand-white uppercase"
+          className="relative z-10 inline-flex h-[52px] min-h-[40px] items-center justify-center gap-[10px] rounded-tl-[12px] rounded-tr-[1000px] rounded-br-[1000px] rounded-bl-[12px] bg-brand px-6 py-3 font-tanker text-[16px] leading-[1.2] font-normal tracking-normal text-brand-white uppercase transition-colors duration-200 hover:bg-brand/70"
         >
           {next.title}
           <ArrowRight size={16} strokeWidth={1.75} />

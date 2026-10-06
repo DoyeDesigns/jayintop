@@ -9,12 +9,15 @@ export type WorkSection = {
   title: string;
   body: string;
   images: WorkImage[];
+  video?: string;
+  poster?: string;
 };
 
 export type WorkItem = {
   id: string;
   title: string;
   category: string;
+  categories: string[];
   client: string;
   director: string;
   filters: Exclude<WorkFilter, "all">[];

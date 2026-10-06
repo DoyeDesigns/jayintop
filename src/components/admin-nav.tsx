@@ -14,6 +14,7 @@ const sections = [
       { label: "Dashboard", href: "/admin/dashboard" },
       { label: "Home", href: "/admin/home" },
       { label: "About", href: "/admin/about" },
+      { label: "Resume", href: "/admin/resume" },
       { label: "Work", href: "/admin/work" },
       { label: "Contact", href: "/admin/contact" },
     ],
@@ -163,7 +164,7 @@ function SaveBar() {
           type="button"
           onClick={() => void save()}
           disabled={!dirty || saving}
-          className="inline-flex h-10 cursor-pointer items-center justify-center rounded-[8px] bg-brand px-5 font-tanker text-[18px] leading-[1.2] font-normal tracking-normal text-white uppercase disabled:cursor-not-allowed disabled:opacity-40"
+          className="inline-flex h-10 cursor-pointer items-center justify-center rounded-[8px] bg-brand px-5 font-tanker text-[18px] leading-[1.2] font-normal tracking-normal text-white uppercase transition-colors duration-200 hover:bg-brand/70 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-brand"
         >
           {label}
         </button>

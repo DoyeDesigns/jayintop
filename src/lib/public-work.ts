@@ -5,8 +5,8 @@ function coverFor(item: CaseItem) {
   return item.cover?.src ?? "";
 }
 
-function filtersFor(category: string): Exclude<WorkFilter, "all">[] {
-  const text = category.toLowerCase();
+function filtersFor(categories: string[]): Exclude<WorkFilter, "all">[] {
+  const text = categories.join(" ").toLowerCase();
   const filters: Exclude<WorkFilter, "all">[] = [];
   if (/logo|brand|identity/.test(text)) filters.push("logo");
   if (/product|ui|ux/.test(text)) filters.push("product");
@@ -38,6 +38,19 @@ function sectionsFrom(item: CaseItem): WorkSection[] {
         body: block.body || block.caption || item.summary,
         images: [],
       };
+      continue;
+    }
+
+    if (block.type === "video") {
+      if (!current) {
+        current = {
+          title: item.title,
+          body: block.caption || item.summary,
+          images: [],
+        };
+      }
+      if (block.url.trim()) current.video = block.url.trim();
+      if (block.urlA?.src) current.poster = block.urlA.src;
       continue;
     }
 
@@ -76,10 +89,11 @@ export function publishedWork(content: AdminContent): WorkItem[] {
     .map((item) => ({
       id: item.id,
       title: item.title,
-      category: item.category,
+      category: item.categories.join(", "),
+      categories: item.categories,
       client: item.client,
       director: item.role,
-      filters: filtersFor(item.category),
+      filters: filtersFor(item.categories),
       image: coverFor(item),
       sections: sectionsFrom(item),
     }));
@@ -98,21 +112,25 @@ export function projectNeighbors(items: WorkItem[], slug: string) {
   };
 }
 
-export function matchesWorkFilter(item: WorkItem, label: string, isAll: boolean) {
-  if (isAll) return true;
+function categoryMatches(category: string, label: string) {
+  const name = category.toLowerCase();
   const text = label.toLowerCase();
-  const category = item.category.toLowerCase();
-  if (text.includes("logo") || text.includes("brand")) {
-    return item.filters.includes("logo") || /logo|brand|identity/.test(category);
+  if (name === text) return true;
+  if ((text.includes("logo") || text.includes("brand")) && /logo|brand|identity/.test(name)) {
+    return true;
   }
-  if (text.includes("product") || text.includes("ui")) {
-    return item.filters.includes("product") || /product|ui|ux/.test(category);
+  if ((text.includes("product") || text.includes("ui")) && /product|ui|ux/.test(name)) {
+    return true;
   }
-  if (text.includes("pack")) {
-    return item.filters.includes("packaging") || category.includes("pack");
-  }
+  if (text.includes("pack") && name.includes("pack")) return true;
   return text
     .split(/\W+/)
     .filter((word) => word.length > 3)
-    .some((word) => category.includes(word));
+    .some((word) => name.includes(word));
+}
+
+export function matchesWorkFilter(item: WorkItem, label: string, isAll: boolean) {
+  if (isAll) return true;
+  const names = item.categories.length ? item.categories : item.category ? [item.category] : [];
+  return names.some((name) => categoryMatches(name, label));
 }

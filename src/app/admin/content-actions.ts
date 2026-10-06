@@ -2,7 +2,7 @@
 
 import { getAdminSession } from "@/lib/admin-session";
 import { defaultContent, mergeContent, type AdminContent, type AdminImage } from "@/lib/admin-content";
-import { checkCloudinary, uploadStoredImage } from "@/lib/cloudinary";
+import { checkCloudinary, createDirectUpload, uploadStoredImage } from "@/lib/cloudinary";
 import { checkFirestore } from "@/lib/firebase-data";
 import { readSiteContent, writeSiteContent } from "@/lib/site-store";
 
@@ -23,6 +23,20 @@ export async function saveSiteContent(content: AdminContent) {
     return {
       ok: false as const,
       error: error instanceof Error ? error.message : "This change could not be saved.",
+    };
+  }
+}
+
+export async function createMediaUpload(kind: "image" | "video") {
+  const session = await getAdminSession();
+  if (!session) return { ok: false as const, error: "Sign in again." };
+
+  try {
+    return { ok: true as const, ticket: await createDirectUpload(kind) };
+  } catch (error) {
+    return {
+      ok: false as const,
+      error: error instanceof Error ? error.message : "The upload could not start.",
     };
   }
 }

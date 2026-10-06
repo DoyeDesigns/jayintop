@@ -4,10 +4,12 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   AreaField,
+  CategoryChecks,
   EditorPage,
   GhostButton,
   ImageField,
   ItemTools,
+  VideoField,
   SelectField,
   Subsection,
   TextField,
@@ -17,9 +19,21 @@ import {
   emptyBlock,
   type CaseStatus,
   type ContentBlock,
+  type WorkFilterItem,
 } from "@/lib/admin-content";
 
 const blockTypes: ContentBlock["type"][] = ["text", "image", "pair", "video", "quote"];
+
+function categoryChoices(filters: WorkFilterItem[], selected: string[]) {
+  const options = filters
+    .slice(1)
+    .map((item) => item.label.trim())
+    .filter(Boolean);
+  const extras = selected.filter(
+    (value) => !options.some((option) => option.toLowerCase() === value.toLowerCase()),
+  );
+  return [...options, ...extras];
+}
 
 export function CaseEditor({ id }: { id: string }) {
   const router = useRouter();
@@ -41,6 +55,28 @@ export function CaseEditor({ id }: { id: string }) {
   }
 
   const path = `cases.${index}`;
+
+  const addCategory = (name: string) => {
+    const all = content.work.filters[0]?.label.trim().toLowerCase();
+    if (all && name.toLowerCase() === all) {
+      window.alert("That name shows every project. Use a specific category.");
+      return;
+    }
+    mutate((draft) => {
+      const filters = draft.work.filters;
+      const existing = filters.find((entry) => entry.label.trim().toLowerCase() === name.toLowerCase());
+      const label = existing?.label.trim() || name;
+      if (!existing) {
+        if (filters.length === 0) filters.push({ label: "All case studies", hidden: false });
+        filters.push({ label: name, hidden: false });
+      }
+      const current = draft.cases.find((entry) => entry.id === id);
+      if (!current) return;
+      if (!current.categories.some((entry) => entry.toLowerCase() === label.toLowerCase())) {
+        current.categories.push(label);
+      }
+    });
+  };
 
   const set = <K extends keyof typeof item>(key: K, value: (typeof item)[K]) => {
     mutate((draft) => {
@@ -118,24 +154,23 @@ export function CaseEditor({ id }: { id: string }) {
         </div>
         <div className="grid gap-6 md:grid-cols-2">
           <TextField
-            label="Category"
-            required
-            help="Shown on the right of the work list."
-            value={item.category}
-            onChange={(value) => set("category", value)}
-          />
-          <TextField
             label="Year"
             required
             value={item.year}
             onChange={(value) => set("year", value)}
           />
+          <TextField
+            label="Your role"
+            required
+            value={item.role}
+            onChange={(value) => set("role", value)}
+          />
         </div>
-        <TextField
-          label="Your role"
-          required
-          value={item.role}
-          onChange={(value) => set("role", value)}
+        <CategoryChecks
+          options={categoryChoices(content.work.filters, item.categories)}
+          selected={item.categories}
+          onChange={(categories) => set("categories", categories)}
+          onAdd={(name) => addCategory(name)}
         />
         <AreaField
           label="Short summary"
@@ -232,15 +267,20 @@ export function CaseEditor({ id }: { id: string }) {
             ) : null}
             {block.type === "video" ? (
               <>
-                <TextField
-                  label="Video link"
-                  help="Paste a YouTube or Vimeo link. Video files are never uploaded here, they are too heavy for a website to serve."
+                <VideoField
+                  label="Video"
                   value={block.url}
+                  onChange={(url) => setBlock(blockIndex, { ...block, url })}
+                />
+                <TextField
+                  label="Or paste a link"
+                  help="YouTube or Vimeo. Leave this blank when you upload a file."
+                  value={/youtube\.com|youtu\.be|vimeo\.com/i.test(block.url) ? block.url : ""}
                   onChange={(url) => setBlock(blockIndex, { ...block, url })}
                 />
                 <ImageField
                   label="Cover frame"
-                  help="Optional still shown before the video plays."
+                  help="Optional still shown before the video plays. 9 MB maximum."
                   value={block.urlA}
                   onChange={(urlA) => setBlock(blockIndex, { ...block, urlA })}
                 />

@@ -28,9 +28,16 @@ export function SelectedWork({
     const sentinel = sentinelRef.current;
     if (!sentinel) return;
 
-    const observer = new IntersectionObserver(([entry]) => {
-      setStuck(!entry.isIntersecting);
-    });
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setStuck(!entry.isIntersecting);
+      },
+      {
+        rootMargin: window.matchMedia("(min-width: 768px)").matches
+          ? "-84px 0px 0px 0px"
+          : "-93px 0px 0px 0px",
+      },
+    );
     observer.observe(sentinel);
     return () => observer.disconnect();
   }, []);
@@ -43,13 +50,13 @@ export function SelectedWork({
     <div className="mt-10">
       <div ref={sentinelRef} aria-hidden className="h-px" />
       <div
-        className={`sticky top-0 z-30 ${
+        className={`sticky top-[93px] z-30 md:top-[84px] ${
           stuck
             ? "bg-[#131313] bg-[url('/backgrounds/default.svg')] bg-cover bg-fixed bg-center"
             : ""
         }`}
       >
-        <div className="px-8 py-4 md:px-10">
+        <div className="py-4">
           <div className="relative md:hidden">
             <button
               type="button"
@@ -133,17 +140,17 @@ export function SelectedWork({
         </div>
       </div>
 
-      <ul className="mt-8 flex flex-col gap-12 px-8 md:px-10">
+      <ul className="mt-8 flex flex-col gap-12">
         {visible.map((item) => (
           <li key={item.id}>
             <article>
               <Link href={`/selected-work/${item.id}`} className="block">
-              <div className="relative aspect-[1380/640] overflow-hidden rounded-lg bg-[#1A1A1A]">
+              <div className="relative aspect-square w-full max-w-[370px] overflow-hidden rounded-lg bg-[#1A1A1A] md:aspect-[1380/640] md:max-w-none">
                 <ContentImage
                   src={item.image}
                   alt=""
                   fill
-                  sizes="(min-width: 768px) 1200px, 100vw"
+                  sizes="(min-width: 768px) 1200px, 370px"
                   className="object-cover"
                 />
               </div>

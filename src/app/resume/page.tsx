@@ -1,19 +1,28 @@
 import type { Metadata } from "next";
 import { Resume } from "@/components/resume";
+import { readSiteContent } from "@/lib/site-store";
 
-export const metadata: Metadata = {
-  title: "Resume",
-  description: "Yinka Jayeola, UI/UX Designer.",
-};
+export const dynamic = "force-dynamic";
 
-export default function ResumePage() {
+export async function generateMetadata(): Promise<Metadata> {
+  const { resume } = await readSiteContent();
+  const description = [resume.name, resume.role].filter(Boolean).join(", ");
+  return {
+    title: resume.title || "Resume",
+    description: description || resume.title,
+  };
+}
+
+export default async function ResumePage() {
+  const { resume } = await readSiteContent();
+
   return (
-    <main className="px-8 py-16 md:px-10 md:py-24">
+    <main className="py-16 md:py-24">
       <h1 className="text-center font-tanker text-[40px] leading-[1.2] font-normal tracking-normal text-brand-white uppercase md:text-[80px]">
-        My resume
+        {resume.title}
       </h1>
       <div className="mt-16">
-        <Resume />
+        <Resume resume={resume} />
       </div>
     </main>
   );
