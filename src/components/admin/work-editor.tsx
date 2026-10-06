@@ -1,6 +1,7 @@
 "use client";
 
 import { ChevronDown, ChevronUp, X } from "lucide-react";
+import { useRef } from "react";
 import { AreaField, AddButton, EditorPage, Subsection, TextField } from "@/components/admin/fields";
 import { useAdminContent, useList } from "@/components/admin/content-provider";
 
@@ -8,9 +9,34 @@ const inputClass =
   "w-full rounded-[8px] border border-[#373A41] bg-transparent px-3 py-2 font-inter text-[16px] leading-[24px] font-normal text-brand-white outline-none placeholder:text-[#85888E] focus:border-brand";
 
 export function WorkEditor() {
-  const { content, setPath } = useAdminContent();
+  const { content, setPath, mutate } = useAdminContent();
   const work = content.work;
   const filters = useList<{ label: string; hidden: boolean }>("work.filters");
+  const nameBeforeEdit = useRef("");
+
+  const renameFilter = (previous: string, next: string) => {
+    const from = previous.trim();
+    const to = next.trim();
+    if (!from || from === to) return;
+    mutate((draft) => {
+      for (const project of draft.cases) {
+        project.categories = project.categories.map((entry) =>
+          entry.toLowerCase() === from.toLowerCase() ? to : entry,
+        );
+      }
+    });
+  };
+
+  const removeFilter = (index: number) => {
+    mutate((draft) => {
+      const label = draft.work.filters[index]?.label.trim().toLowerCase() ?? "";
+      draft.work.filters.splice(index, 1);
+      if (!label) return;
+      for (const project of draft.cases) {
+        project.categories = project.categories.filter((entry) => entry.toLowerCase() !== label);
+      }
+    });
+  };
 
   return (
     <EditorPage>
@@ -33,7 +59,7 @@ export function WorkEditor() {
 
       <Subsection
         title="Filters"
-        hint="The buttons above the project list, and the category checkboxes on each project. The first one shows everything. Hide takes a filter off the live page. Save to publish the change."
+        hint="These are the checkboxes on each case study. A filter added there shows up here. Rename or remove it here. The first one shows everything. Hide takes a filter off the live page. Save to publish the change."
       >
         <div className="flex flex-col gap-3">
           {filters.items.map((item, index) => (
@@ -41,6 +67,10 @@ export function WorkEditor() {
               <input
                 type="text"
                 value={item.label}
+                onFocus={(event) => {
+                  nameBeforeEdit.current = event.target.value;
+                }}
+                onBlur={(event) => renameFilter(nameBeforeEdit.current, event.target.value)}
                 onChange={(event) => filters.set(index, { ...item, label: event.target.value })}
                 className={`${inputClass} h-10 min-w-0 md:flex-1`}
               />
@@ -66,7 +96,7 @@ export function WorkEditor() {
               <button
                 type="button"
                 aria-label="Remove"
-                onClick={() => filters.remove(index)}
+                onClick={() => removeFilter(index)}
                 className="inline-flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-[6px] border border-[#373A41] text-brand-white hover:border-[#E2705F] hover:text-[#E2705F]"
               >
                 <X className="size-4" aria-hidden />

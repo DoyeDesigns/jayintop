@@ -501,14 +501,14 @@ export function CategoryChecks({
   return (
     <div className="flex flex-col gap-3">
       <p className="font-tanker text-[20px] leading-[1.2] font-normal tracking-normal text-brand-white uppercase">
-        Categories
+        Filters
       </p>
       <p className="font-inter text-[14px] leading-[20px] font-normal text-[#94979C]">
-        Tick every category that applies to this project.
+        Tick every filter that applies. A new one is added to Work, where you rename or remove it.
       </p>
       {options.length === 0 ? (
         <p className="font-inter text-[14px] leading-[20px] text-[#94979C]">
-          No categories yet. Add one below.
+          No filters yet. Add one below.
         </p>
       ) : (
         <ul className="flex flex-col gap-3">
@@ -543,7 +543,7 @@ export function CategoryChecks({
         <input
           type="text"
           value={name}
-          placeholder="New category"
+          placeholder="New filter"
           onChange={(event) => setName(event.target.value)}
           onKeyDown={(event) => {
             if (event.key === "Enter") {
@@ -553,7 +553,7 @@ export function CategoryChecks({
           }}
           className={`${inputClass} h-10 md:max-w-[360px]`}
         />
-        <AddButton onClick={add}>Add category</AddButton>
+        <AddButton onClick={add}>Add filter</AddButton>
       </div>
     </div>
   );
