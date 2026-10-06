@@ -53,7 +53,7 @@ export default async function Home() {
 
   return (
     <main className="pt-16 pb-0 md:pt-24 md:pb-0">
-      <div className="flex flex-col items-center md:hidden">
+      <div className="flex flex-col items-center md:hidden mb-10">
         <Portrait priority />
         <div className="mt-8 flex w-full flex-col items-start text-left">
           <p className="font-bespoke text-[28px] leading-[1.2] font-normal tracking-normal text-brand-white">
