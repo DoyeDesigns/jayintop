@@ -50,3 +50,52 @@ body {
   background-size: cover;
   background-repeat: no-repeat;
 }
+
+.flip-scene {
+  perspective: 1000px;
+  -webkit-perspective: 1000px;
+  isolation: isolate;
+}
+
+.flip-card {
+  transform-style: preserve-3d;
+  -webkit-transform-style: preserve-3d;
+  transition: transform 700ms ease;
+}
+
+.group:hover .flip-card,
+.group:focus-visible .flip-card {
+  transform: rotateY(180deg);
+}
+
+.flip-face {
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+.flip-front {
+  transform: rotateY(0deg) translateZ(1px);
+}
+
+.flip-back {
+  transform: rotateY(180deg) translateZ(1px);
+}
+
+.flip-tag {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 0s linear 350ms, visibility 0s linear 350ms;
+}
+
+.group:hover .flip-tag,
+.group:focus-visible .flip-tag {
+  opacity: 0;
+  visibility: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flip-card,
+  .flip-tag {
+    transition: none;
+  }
+}

@@ -3,8 +3,12 @@ import Link from "next/link";
 import { HomeBelief } from "@/components/home-belief";
 import { HomeSelectedWorks } from "@/components/home-selected-works";
 import { HomeTestimonials } from "@/components/home-testimonials";
+import { HomeUseCases, type HomeCategory, type HomeUseCase } from "@/components/home-use-cases";
+import { HomeVideo } from "@/components/home-video";
+import type { HomeCorner, Service, WorkFilterItem } from "@/lib/admin-content";
 import { RichText } from "@/lib/rich-text";
-import { homeMarqueeWork } from "@/lib/public-work";
+import { homeMarqueeWork, publishedWork } from "@/lib/public-work";
+import type { WorkItem } from "@/lib/work";
 import { readSiteContent } from "@/lib/site-store";
 
 export const dynamic = "force-dynamic";
@@ -14,6 +18,60 @@ const sideCopy =
 
 const workLinkClass =
   "inline-flex h-[52px] items-center justify-center rounded-tl-[12px] rounded-tr-[1000px] rounded-br-[1000px] rounded-bl-[12px] bg-brand px-6 font-tanker text-[20px] leading-[1.2] font-normal tracking-normal text-brand-white uppercase transition-colors duration-200 hover:bg-brand/70";
+
+const fallbackImages = ["/about-img.png", "/about-img-2.png", "/about-yinka.png", "/about-img-mobile.png"];
+
+function cornerItems(corners: HomeCorner[], works: WorkItem[]): HomeUseCase[] {
+  return corners.slice(0, 4).map((corner, index) => {
+    const work = works[index];
+    const imageSrc =
+      corner.image?.src ||
+      work?.image ||
+      work?.imageMobile ||
+      fallbackImages[index % fallbackImages.length];
+
+    return {
+      title: corner.title.trim() || work?.title || `Work ${index + 1}`,
+      href:
+        corner.href.trim() ||
+        (work ? `/selected-work/${work.id}` : "#"),
+      imageSrc,
+      videoSrc: work?.sections.find((section) => section.video)?.video,
+      brand:
+        corner.brand.trim() ||
+        work?.client.trim() ||
+        work?.director.trim() ||
+        "Jayintop",
+      tag:
+        corner.tag.trim() ||
+        work?.categories.find((category) => category.trim()) ||
+        "Case study",
+    };
+  });
+}
+
+function categoryItems(
+  filters: WorkFilterItem[],
+  services: Service[],
+  works: WorkItem[],
+): HomeCategory[] {
+  return filters
+    .filter((filter) => !filter.all && !filter.hidden && filter.label.trim())
+    .map((filter, index) => {
+      const key = filter.label.trim().toLowerCase();
+      const service = services.find(
+        (item) => item.title.trim().toLowerCase() === key,
+      );
+      return {
+        title: filter.label,
+        body: service?.copy ?? "",
+        imageSrc:
+          service?.image?.src || fallbackImages[index % fallbackImages.length],
+        tags: [],
+        corners: cornerItems(service?.corners ?? [], works),
+      };
+    });
+}
 
 function Portrait({ priority = false }: { priority?: boolean }) {
   return (
@@ -33,6 +91,7 @@ function Portrait({ priority = false }: { priority?: boolean }) {
 export default async function Home() {
   const content = await readSiteContent();
   const { home, testimonials } = content;
+  const works = publishedWork(content);
   const quotes = testimonials
     .filter((item) => item.quote.trim())
     .map(({ quote, name, role }) => ({ quote, name, role }));
@@ -79,6 +138,14 @@ export default async function Home() {
         eyebrow={home.beliefEyebrow}
         lead={home.beliefLead}
         paragraphs={home.beliefBody.split(/\n\s*\n/).filter(Boolean)}
+      />
+      <HomeUseCases
+        categories={categoryItems(content.work.filters, home.services, works)}
+      />
+      <HomeVideo
+        posterSrc={home.video?.poster?.src || "/magic.png"}
+        videoSrc={home.video?.src || ""}
+        label={home.video?.label || "Play"}
       />
       <HomeTestimonials items={quotes} />
     </main>

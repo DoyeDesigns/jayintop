@@ -4,6 +4,7 @@ import { Check, ChevronDown, ChevronUp, X } from "lucide-react";
 import { useId, useState, type ReactNode } from "react";
 import type { AdminImage } from "@/lib/admin-content";
 import { uploadMediaFile } from "@/lib/upload-media";
+import { isVideoLink } from "@/lib/video";
 import { useList } from "@/components/admin/content-provider";
 
 const inputClass =
@@ -142,6 +143,8 @@ export function TextField({
   required,
   max,
   format = false,
+  onFocus,
+  onBlur,
 }: {
   label: string;
   value: string;
@@ -150,6 +153,8 @@ export function TextField({
   required?: boolean;
   max?: number;
   format?: boolean;
+  onFocus?: () => void;
+  onBlur?: () => void;
 }) {
   const id = useId();
   const helpId = `${id}-help`;
@@ -166,6 +171,8 @@ export function TextField({
         required={required}
         aria-describedby={help ? helpId : undefined}
         onChange={(event) => onChange(event.target.value)}
+        onFocus={onFocus}
+        onBlur={onBlur}
         className={`${inputClass} h-10`}
       />
       {help ? (
@@ -225,22 +232,31 @@ export function SelectField({
   onChange,
   options,
   required,
+  help,
 }: {
   label: string;
   value: string;
   onChange: (value: string) => void;
   options: { value: string; label: string }[];
   required?: boolean;
+  help?: string;
 }) {
   const id = useId();
+  const helpId = `${id}-help`;
 
   return (
     <div className="flex flex-col gap-2">
       <Label label={label} required={required} htmlFor={id} />
+      {help ? (
+        <p id={helpId} className="font-inter text-[14px] leading-[20px] font-normal text-[#94979C]">
+          {help}
+        </p>
+      ) : null}
       <select
         id={id}
         value={value}
         required={required}
+        aria-describedby={help ? helpId : undefined}
         onChange={(event) => onChange(event.target.value)}
         className={`${inputClass} h-10`}
       >
@@ -501,7 +517,7 @@ export function VideoField({
     }
   };
 
-  const fileVideo = value && !/youtube\.com|youtu\.be|vimeo\.com/i.test(value);
+  const fileVideo = Boolean(value) && !isVideoLink(value);
 
   return (
     <div className="flex flex-col gap-2">

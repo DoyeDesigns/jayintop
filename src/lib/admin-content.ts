@@ -7,9 +7,25 @@ export type AdminImage = {
   h: number;
 };
 
+export type CornerProjectImage = "desktop" | "mobile" | "marquee";
+
+export type HomeCorner = {
+  title: string;
+  brand: string;
+  tag: string;
+  href: string;
+  image: AdminImage | null;
+  /** Optional link to a case study for quick fill in admin. */
+  projectId: string;
+  projectImage: CornerProjectImage | "";
+};
+
 export type Service = {
   title: string;
   copy: string;
+  image: AdminImage | null;
+  /** Four floating cards for this category tab (top-left, top-right, bottom-left, bottom-right). */
+  corners: HomeCorner[];
 };
 
 export type AboutSection = {
@@ -113,6 +129,11 @@ export type AdminContent = {
     beliefLead: string;
     beliefBody: string;
     services: Service[];
+    video: {
+      poster: AdminImage | null;
+      src: string;
+      label: string;
+    };
   };
   about: {
     eyebrow: string;
@@ -329,26 +350,35 @@ export function defaultContent(): AdminContent {
         "A logo that only looks right on a clean white background is not finished. A screen that looks great and loses customers is not finished either. If it looks good and does not work, it is decoration, and decoration is easy to find.\n\nSo I start with the problem, not the picture. Who uses this. What stops them. What counts as success. We agree on the answers first, then I design, then we check the result against what we agreed.",
       services: [
         {
-          title: "Brand identity",
+          title: "All case studies",
+          copy: "A few projects taken from the first sketch through to a finished system. Open one to see how it was built.",
+          image: null,
+          corners: emptyCorners(),
+        },
+        {
+          title: "Logo and brand design",
           copy: "Your brand looks smaller than the work you actually do. I fix that with a logo, colours, type and clear rules for using them.",
+          image: null,
+          corners: emptyCorners(),
         },
         {
-          title: "Product design",
+          title: "Product UI/UX",
           copy: "People are dropping out of your product and nobody can say exactly where. I find out, redesign the screens that lose them, and give your developers files they can build from.",
+          image: null,
+          corners: emptyCorners(),
         },
         {
-          title: "Website design",
-          copy: "Your website looks like everyone else in your market. I plan it, design it, and make sure it works as well on a phone as on a laptop.",
-        },
-        {
-          title: "Design systems",
-          copy: "Your product looks slightly different on every screen. I build reusable parts and simple rules so it stays consistent as your team grows.",
-        },
-        {
-          title: "Social and print",
+          title: "Packaging",
           copy: "The brand looks sharp on the website and falls apart in the pitch deck, the packaging and the feed. I extend it everywhere else you show up.",
+          image: null,
+          corners: emptyCorners(),
         },
       ],
+      video: {
+        poster: { src: "/magic.png", name: "magic.png", w: 1600, h: 900 },
+        src: "",
+        label: "Play",
+      },
     },
     about: {
       eyebrow: "About me",
@@ -476,13 +506,147 @@ export function mergeContent(base: AdminContent, saved: unknown): AdminContent {
   };
 
   const merged = mergeValue(base, saved) as AdminContent;
+  const filters = normalizeFilters(merged.work.filters);
+  const home = normalizeHome(merged.home);
   return {
     ...merged,
     cases: merged.cases.map(normalizeCase),
     about: normalizeAbout(merged.about),
-    work: { ...merged.work, filters: normalizeFilters(merged.work.filters) },
+    home: {
+      ...home,
+      services: syncServicesToFilters(home.services, filters),
+    },
+    work: { ...merged.work, filters },
     resume: normalizeResume(merged.resume ?? defaultResume()),
     site: { ...merged.site, socials: withIconSocials(merged.site.socials) },
+  };
+}
+
+function emptyCorner(): HomeCorner {
+  return {
+    title: "",
+    brand: "",
+    tag: "",
+    href: "",
+    image: null,
+    projectId: "",
+    projectImage: "",
+  };
+}
+
+function emptyCorners(): HomeCorner[] {
+  return [emptyCorner(), emptyCorner(), emptyCorner(), emptyCorner()];
+}
+
+function normalizeProjectImage(value: unknown): CornerProjectImage | "" {
+  return value === "desktop" || value === "mobile" || value === "marquee" ? value : "";
+}
+
+function normalizeCorners(raw: unknown, fallback?: HomeCorner[]): HomeCorner[] {
+  const source = Array.isArray(raw) ? raw : Array.isArray(fallback) ? fallback : [];
+  const next = source.slice(0, 4).map((item) => {
+    const row = item as Partial<HomeCorner> | null | undefined;
+    return {
+      title: typeof row?.title === "string" ? row.title : "",
+      brand: typeof row?.brand === "string" ? row.brand : "",
+      tag: typeof row?.tag === "string" ? row.tag : "",
+      href: typeof row?.href === "string" ? row.href : "",
+      image: asImage(row?.image),
+      projectId: typeof row?.projectId === "string" ? row.projectId : "",
+      projectImage: normalizeProjectImage(row?.projectImage),
+    };
+  });
+  while (next.length < 4) next.push(emptyCorner());
+  return next;
+}
+
+export function projectCornerImage(
+  project: CaseItem,
+  kind: CornerProjectImage,
+): AdminImage | null {
+  if (kind === "desktop") return project.cover;
+  if (kind === "mobile") return project.coverMobile;
+  return project.marqueeCover;
+}
+
+export function fillCornerFromProject(
+  project: CaseItem,
+  imageKind?: CornerProjectImage | "",
+): HomeCorner {
+  const available: CornerProjectImage[] = [];
+  if (project.cover) available.push("desktop");
+  if (project.coverMobile) available.push("mobile");
+  if (project.marqueeCover) available.push("marquee");
+  const kind =
+    imageKind && available.includes(imageKind) ? imageKind : available[0] || "";
+
+  return {
+    title: project.title,
+    brand: project.client.trim() || project.role.trim() || "",
+    tag: project.categories.find((entry) => entry.trim()) || "",
+    href: `/selected-work/${project.id}`,
+    image: kind ? projectCornerImage(project, kind) : null,
+    projectId: project.id,
+    projectImage: kind,
+  };
+}
+
+/** What I do categories share Work filters (everything except All). */
+export function syncServicesToFilters(
+  services: Service[],
+  filters: WorkFilterItem[],
+): Service[] {
+  const byTitle = new Map(
+    (Array.isArray(services) ? services : []).map(
+      (item) => [item.title.trim().toLowerCase(), item] as const,
+    ),
+  );
+  return filters
+    .filter((item) => !item.all)
+    .map((item) => {
+      const existing = byTitle.get(item.label.trim().toLowerCase());
+      return {
+        title: item.label,
+        copy: existing?.copy ?? "",
+        image: existing?.image ?? null,
+        corners: normalizeCorners(existing?.corners),
+      };
+    });
+}
+
+export function categoryFilterEntries(filters: WorkFilterItem[]) {
+  return filters
+    .map((item, index) => ({ item, index }))
+    .filter(({ item }) => !item.all);
+}
+
+function normalizeHome(home: AdminContent["home"]): AdminContent["home"] {
+  const services = Array.isArray(home?.services) ? home.services : [];
+  // Older saves kept one shared corner set on home; seed each category once.
+  const legacyCorners = normalizeCorners(
+    (home as AdminContent["home"] & { corners?: HomeCorner[] }).corners,
+  );
+  const hasLegacy = legacyCorners.some((item) => item.image?.src || item.title.trim());
+
+  return {
+    ...home,
+    services: services.map((item) => {
+      const rawCorners = (item as Service)?.corners;
+      const useLegacy = !Array.isArray(rawCorners) && hasLegacy;
+      return {
+        title: typeof item?.title === "string" ? item.title : "",
+        copy: typeof item?.copy === "string" ? item.copy : "",
+        image: asImage((item as Service)?.image),
+        corners: normalizeCorners(rawCorners, useLegacy ? legacyCorners : undefined),
+      };
+    }),
+    video: {
+      poster: asImage(home?.video?.poster),
+      src: typeof home?.video?.src === "string" ? home.video.src : "",
+      label: typeof home?.video?.label === "string" && home.video.label.trim()
+        ? home.video.label
+        : "Play",
+    },
   };
 }
 

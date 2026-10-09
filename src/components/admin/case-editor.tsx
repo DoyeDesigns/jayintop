@@ -17,10 +17,12 @@ import {
 import { useAdminContent } from "@/components/admin/content-provider";
 import {
   emptyBlock,
+  syncServicesToFilters,
   type CaseStatus,
   type ContentBlock,
   type WorkFilterItem,
 } from "@/lib/admin-content";
+import { isVideoLink } from "@/lib/video";
 
 const blockTypes: ContentBlock["type"][] = ["text", "image", "pair", "video", "quote"];
 
@@ -71,6 +73,7 @@ export function CaseEditor({ id }: { id: string }) {
           filters.unshift({ label: "All", hidden: false, all: true });
         }
         filters.push({ label: name, hidden: false });
+        draft.home.services = syncServicesToFilters(draft.home.services, filters);
       }
       const current = draft.cases.find((entry) => entry.id === id);
       if (!current) return;
@@ -311,8 +314,8 @@ export function CaseEditor({ id }: { id: string }) {
                 />
                 <TextField
                   label="Or paste a link"
-                  help="YouTube or Vimeo. Leave this blank when you upload a file."
-                  value={/youtube\.com|youtu\.be|vimeo\.com/i.test(block.url) ? block.url : ""}
+                  help="YouTube, Vimeo, or Google Drive. Leave this blank when you upload a file."
+                  value={isVideoLink(block.url) ? block.url : ""}
                   onChange={(url) => setBlock(blockIndex, { ...block, url })}
                 />
                 <ImageField

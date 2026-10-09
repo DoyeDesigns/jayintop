@@ -1,6 +1,7 @@
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { ContentImage } from "@/components/content-image";
+import { videoView } from "@/lib/video";
 import type { WorkImage, WorkItem } from "@/lib/work";
 
 const heading =
@@ -31,14 +32,6 @@ function VideoPlayer({ url, poster }: { url: string; poster?: string }) {
       className="aspect-video w-full rounded-lg bg-black"
     />
   );
-}
-
-function videoView(url: string) {
-  const youtube = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([\w-]+)/);
-  if (youtube) return { kind: "embed" as const, src: `https://www.youtube.com/embed/${youtube[1]}` };
-  const vimeo = url.match(/vimeo\.com\/(?:video\/)?(\d+)/);
-  if (vimeo) return { kind: "embed" as const, src: `https://player.vimeo.com/video/${vimeo[1]}` };
-  return { kind: "file" as const, src: url };
 }
 
 function Frame({ image, alt }: { image: WorkImage; alt: string }) {

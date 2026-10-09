@@ -4,6 +4,7 @@ import { ChevronDown, ChevronUp, X } from "lucide-react";
 import { useRef } from "react";
 import { AreaField, AddButton, EditorPage, Subsection, TextField } from "@/components/admin/fields";
 import { useAdminContent, useList } from "@/components/admin/content-provider";
+import { syncServicesToFilters } from "@/lib/admin-content";
 
 const inputClass =
   "w-full rounded-[8px] border border-[#373A41] bg-transparent px-3 py-2 font-inter text-[16px] leading-[24px] font-normal text-brand-white outline-none placeholder:text-[#85888E] focus:border-brand";
@@ -24,6 +25,11 @@ export function WorkEditor() {
           entry.toLowerCase() === from.toLowerCase() ? to : entry,
         );
       }
+      for (const service of draft.home.services) {
+        if (service.title.trim().toLowerCase() === from.toLowerCase()) {
+          service.title = to;
+        }
+      }
     });
   };
 
@@ -35,6 +41,9 @@ export function WorkEditor() {
       for (const project of draft.cases) {
         project.categories = project.categories.filter((entry) => entry.toLowerCase() !== label);
       }
+      draft.home.services = draft.home.services.filter(
+        (service) => service.title.trim().toLowerCase() !== label,
+      );
     });
   };
 
@@ -59,7 +68,7 @@ export function WorkEditor() {
 
       <Subsection
         title="Filters"
-        hint="All shows every project and can be hidden. The other filters are case studies. A filter added on a project shows up here. Rename or remove it here. Hide takes a filter off the live page. Save to publish the change."
+        hint="All shows every project and can be hidden. The other filters are also What I do categories on Home. Rename or remove here or under Home. Hide takes a filter off the live Work page. Save to publish."
       >
         <div className="flex flex-col gap-3">
           {filters.items.map((item, index) => (
@@ -112,7 +121,19 @@ export function WorkEditor() {
               </div>
             </div>
           ))}
-          <AddButton onClick={() => filters.add({ label: "", hidden: false })}>Add filter</AddButton>
+          <AddButton
+            onClick={() => {
+              mutate((draft) => {
+                draft.work.filters.push({ label: "", hidden: false });
+                draft.home.services = syncServicesToFilters(
+                  draft.home.services,
+                  draft.work.filters,
+                );
+              });
+            }}
+          >
+            Add filter
+          </AddButton>
         </div>
       </Subsection>
     </EditorPage>
