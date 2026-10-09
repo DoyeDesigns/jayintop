@@ -29,15 +29,16 @@ export function HomeEditor() {
         <TextField
           label="Highlight"
           required
-          max={60}
-          help="This is the single most important sentence on your site"
+          max={200}
+          format
+          help="Select words, then Bold, Italic, or Color. This is the main line on the home page."
           value={home.heroHeadline}
           onChange={(value) => setPath("home.heroHeadline", value)}
         />
         <TextField
           label="Words to highlight in orange"
           required
-          help="must appear in the headline exactly"
+          help="A shortcut. These words turn orange if they appear in the line above."
           value={home.heroHighlight}
           onChange={(value) => setPath("home.heroHighlight", value)}
         />

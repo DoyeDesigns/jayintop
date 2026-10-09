@@ -11,13 +11,12 @@ import {
   TextField,
 } from "@/components/admin/fields";
 import { useAdminContent, useList } from "@/components/admin/content-provider";
-import type { AboutSection, Receipt } from "@/lib/admin-content";
+import type { AboutSection } from "@/lib/admin-content";
 
 export function AboutEditor() {
   const { content, setPath } = useAdminContent();
   const about = content.about;
   const sections = useList<AboutSection>("about.sections");
-  const receipts = useList<Receipt>("about.receipts");
 
   return (
     <EditorPage>
@@ -32,14 +31,16 @@ export function AboutEditor() {
         <TextField
           label="Headline"
           required
-          max={90}
+          max={240}
+          format
+          help="Select words, then Bold, Italic, or Color. Orange is #F9A000."
           value={about.headline}
           onChange={(value) => setPath("about.headline", value)}
         />
         <TextField
-          label="Words to underline"
+          label="Words to highlight in orange"
           required
-          help="Must appear in the headline exactly."
+          help="A shortcut. These words turn orange if they appear in the headline. You can also color any words with the headline tools."
           value={about.highlight}
           onChange={(value) => setPath("about.highlight", value)}
         />
@@ -47,12 +48,16 @@ export function AboutEditor() {
           label="Sub line"
           required
           rows={2}
+          format
           value={about.sub}
           onChange={(value) => setPath("about.sub", value)}
         />
       </Subsection>
 
-      <Subsection title="Main sections" hint="The three alternating blocks.">
+      <Subsection
+        title="Main sections"
+        hint="The work, the reason, and the way I work. Select words, then Bold, Italic, or Color. A blank line starts a new paragraph. Save to replace the live page."
+      >
         {sections.items.map((section, index) => (
           <div key={`section-${index}`} className="flex flex-col gap-4 border-b border-[#22262F] pb-6">
             <ItemTools
@@ -71,7 +76,8 @@ export function AboutEditor() {
             <AreaField
               label="Body copy"
               required
-              rows={3}
+              rows={6}
+              format
               value={section.body}
               onChange={(value) => sections.set(index, { ...section, body: value })}
             />
@@ -94,40 +100,6 @@ export function AboutEditor() {
         hint="Short personal lines. Five is a good number."
       >
         <StringList path="about.bits" addLabel="Add line" />
-      </Subsection>
-
-      <Subsection
-        title="Numbers"
-        hint="Keep these true. They are the fastest proof on the site."
-      >
-        {receipts.items.map((receipt, index) => (
-          <div key={`receipt-${index}`} className="flex flex-col gap-4 border-b border-[#22262F] pb-6">
-            <ItemTools
-              title={`Number ${index + 1}`}
-              index={index}
-              total={receipts.items.length}
-              onMove={(direction) => receipts.move(index, direction)}
-              onRemove={() => receipts.remove(index)}
-            />
-            <div className="grid gap-6 md:grid-cols-2">
-              <TextField
-                label="Figure"
-                required
-                value={receipt.value}
-                onChange={(value) => receipts.set(index, { ...receipt, value })}
-              />
-              <TextField
-                label="Label"
-                required
-                value={receipt.label}
-                onChange={(value) => receipts.set(index, { ...receipt, label: value })}
-              />
-            </div>
-          </div>
-        ))}
-        <AddButton onClick={() => receipts.add({ value: "", label: "" })}>
-          Add number
-        </AddButton>
       </Subsection>
 
       <Subsection title="Closing">

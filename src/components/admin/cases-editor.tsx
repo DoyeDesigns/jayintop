@@ -33,6 +33,10 @@ function blankCase(): CaseItem {
     year: String(new Date().getFullYear()),
     status: "draft",
     cover: null,
+    coverMobile: null,
+    showOnHome: true,
+    marqueeSource: "desktop",
+    marqueeCover: null,
     summary: "",
     blocks: [],
   };

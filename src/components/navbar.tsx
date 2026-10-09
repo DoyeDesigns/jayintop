@@ -4,11 +4,13 @@ import Link from "next/link";
 import { useMenu } from "@/components/menu";
 
 export function Navbar() {
-  const { openMenu } = useMenu();
+  const { openMenu, covered } = useMenu();
 
   return (
     <>
-    <header className="fixed inset-x-0 top-0 z-40 border-b border-[#C0C0C0] bg-[#131313] bg-[url('/backgrounds/default.svg')] bg-cover bg-fixed bg-center md:border-b-0">
+    <header className={`fixed inset-x-0 top-0 z-40 border-b border-[#C0C0C0] bg-[#131313] bg-[url('/backgrounds/default.svg')] bg-cover bg-fixed bg-center md:border-b-0 ${
+      covered ? "invisible" : ""
+    }`}>
       <div className="flex h-[93px] w-full items-center justify-between px-8 md:h-[84px] md:px-10">
         <Link href="/" className="flex items-center gap-3">
         <img
@@ -43,7 +45,9 @@ export function Navbar() {
           aria-expanded={false}
           aria-controls="site-menu"
           onClick={openMenu}
-          className="inline-flex h-[52px] w-[86px] cursor-pointer flex-col items-center justify-center gap-[6px] rounded-tr-[1000px] rounded-br-[1000px] border-brand bg-brand px-6 py-3 transition-colors duration-200 hover:bg-brand/70"
+          className={`inline-flex h-[52px] w-[86px] cursor-pointer flex-col items-center justify-center gap-[6px] rounded-tr-[1000px] rounded-br-[1000px] border-brand bg-brand px-6 py-3 transition-colors duration-200 hover:bg-brand/70 ${
+            covered ? "invisible" : ""
+          }`}
         >
           <span className="h-[4px] w-full bg-brand-white opacity-100" />
           <span className="h-[4px] w-full bg-brand-white opacity-100" />
@@ -56,7 +60,9 @@ export function Navbar() {
           aria-expanded={false}
           aria-controls="site-menu"
           onClick={openMenu}
-          className="inline-flex h-[49px] cursor-pointer flex-col items-end justify-center gap-[6px] md:hidden"
+          className={`inline-flex h-[49px] cursor-pointer flex-col items-end justify-center gap-[6px] md:hidden ${
+            covered ? "invisible" : ""
+          }`}
         >
           <span className="h-[4px] w-[43px] bg-brand-white" />
           <span className="h-[4px] w-[43px] bg-brand-white" />

@@ -1,3 +1,5 @@
+import { socials as iconSocials } from "@/lib/socials";
+
 export type AdminImage = {
   src: string;
   name: string;
@@ -14,11 +16,6 @@ export type AboutSection = {
   title: string;
   body: string;
   media: AdminImage | null;
-};
-
-export type Receipt = {
-  value: string;
-  label: string;
 };
 
 export type TestimonialItem = {
@@ -41,9 +38,12 @@ export type ContentBlock = {
 
 export type CaseStatus = "published" | "hidden" | "draft";
 
+export type MarqueeSource = "desktop" | "mobile" | "custom";
+
 export type WorkFilterItem = {
   label: string;
   hidden: boolean;
+  all?: boolean;
 };
 
 export type CaseItem = {
@@ -55,6 +55,10 @@ export type CaseItem = {
   year: string;
   status: CaseStatus;
   cover: AdminImage | null;
+  coverMobile: AdminImage | null;
+  showOnHome: boolean;
+  marqueeSource: MarqueeSource;
+  marqueeCover: AdminImage | null;
   summary: string;
   blocks: ContentBlock[];
 };
@@ -62,6 +66,7 @@ export type CaseItem = {
 export type SocialLink = {
   label: string;
   url: string;
+  hidden?: boolean;
 };
 
 export type ResumeContact = {
@@ -116,7 +121,6 @@ export type AdminContent = {
     sub: string;
     sections: AboutSection[];
     bits: string[];
-    receipts: Receipt[];
     closeLine: string;
     closeCta: string;
   };
@@ -301,11 +305,13 @@ export function defaultContent(): AdminContent {
       metaDesc:
         "Brand identity and product UI/UX design for startups in fintech, healthtech and edtech.",
       socials: [
-        { label: "Instagram", url: "" },
-        { label: "X", url: "" },
-        { label: "LinkedIn", url: "" },
-        { label: "Dribbble", url: "" },
-        { label: "WhatsApp", url: "" },
+        { label: "Instagram", url: "", hidden: false },
+        { label: "X", url: "", hidden: false },
+        { label: "LinkedIn", url: "", hidden: false },
+        { label: "Dribbble", url: "", hidden: false },
+        { label: "WhatsApp", url: "", hidden: false },
+        { label: "Telegram", url: "", hidden: false },
+        { label: "Behance", url: "", hidden: false },
       ],
     },
     home: {
@@ -353,17 +359,17 @@ export function defaultContent(): AdminContent {
       sections: [
         {
           title: "The work",
-          body: "I do two things, and only two, because I would rather be excellent at a pair of them than average at ten.",
+          body: "I do two things, and only two, because I would rather be excellent at a pair of them than average at ten.\n\n**Brand identity.** A logo, a colour and type system, and clear rules for using them. Built to hold up on a small label and on a shop front, and simple enough that your team can apply it without calling me.\n\n**Product design.** The screens people actually use. Sign up, checkout, payments, messaging and the design system behind them. Mostly for startups in fintech, healthtech and edtech, where a confusing screen costs real money.",
           media: null,
         },
         {
           title: "The reason",
-          body: "Most design fails quietly. The logo only works on a clean background. The screen looks lovely and loses customers.",
+          body: "Most design fails quietly. The logo only works on a clean background. The screen looks lovely and loses customers. Nobody calls it a failure. It just never earns anything back.\n\nI would rather make the other kind. Work that carries your idea and still does its job once real people get their hands on it. That is the whole standard, and I hold every project to it.\n\nThe longer aim is bigger than any single job. I want to build a practice worth respecting in this industry, and to give something useful back to other designers along the way.",
           media: null,
         },
         {
           title: "The way I work",
-          body: "Four steps, every time. Discovery, brief, creation, delivery. Nothing gets designed until we have both agreed in writing what it needs to achieve.",
+          body: "Four steps, every time. **Discovery, brief, creation, delivery.** Nothing gets designed until we have both agreed in writing what it needs to achieve.\n\nResearch comes before drawing. I have run more than sixty user interviews on a single project just to check a direction was worth building. I write decisions down instead of defending them in a meeting, and I show progress at agreed points rather than saving one big reveal for the end.\n\nDelivery means what it says. Files named and organised, accessibility handled from the first screen, and a handover your developers can build from without a follow up call.",
           media: null,
         },
       ],
@@ -374,12 +380,6 @@ export function defaultContent(): AdminContent {
         "I play chess. It is where I learned to read the whole board before moving.",
         "I would rather you tell me the truth about a design than be polite about it.",
       ],
-      receipts: [
-        { value: "400+", label: "Screens designed" },
-        { value: "60+", label: "User interviews" },
-        { value: "10k", label: "Downloads on a v1.0" },
-        { value: "35%", label: "More bookings" },
-      ],
       closeLine: "For people who want the work to actually work.",
       closeCta: "See what I have made",
     },
@@ -388,6 +388,7 @@ export function defaultContent(): AdminContent {
       subtitle:
         "A few projects taken from the first sketch through to a finished system. Open one to see how it was built.",
       filters: [
+        { label: "All", hidden: false, all: true },
         { label: "All case studies", hidden: false },
         { label: "Logo and brand design", hidden: false },
         { label: "Product UI/UX", hidden: false },
@@ -478,15 +479,48 @@ export function mergeContent(base: AdminContent, saved: unknown): AdminContent {
   return {
     ...merged,
     cases: merged.cases.map(normalizeCase),
+    about: normalizeAbout(merged.about),
     work: { ...merged.work, filters: normalizeFilters(merged.work.filters) },
     resume: normalizeResume(merged.resume ?? defaultResume()),
+    site: { ...merged.site, socials: withIconSocials(merged.site.socials) },
   };
 }
 
 export function visibleFilterLabels(filters: WorkFilterItem[]) {
   return filters
-    .filter((item, index) => (index === 0 || !item.hidden) && item.label.trim())
-    .map((item) => item.label);
+    .filter((item) => !item.hidden && item.label.trim())
+    .map((item) => ({ label: item.label, all: Boolean(item.all) }));
+}
+
+const starterBodies: Record<string, string> = {
+  "the work":
+    "I do two things, and only two, because I would rather be excellent at a pair of them than average at ten.",
+  "the reason":
+    "Most design fails quietly. The logo only works on a clean background. The screen looks lovely and loses customers.",
+  "the way i work":
+    "Four steps, every time. Discovery, brief, creation, delivery. Nothing gets designed until we have both agreed in writing what it needs to achieve.",
+};
+
+function normalizeAbout(about: AdminContent["about"]): AdminContent["about"] {
+  const starters = defaultContent().about.sections;
+  return {
+    ...about,
+    sections: about.sections.map((section) => {
+      const key = section.title.trim().toLowerCase();
+      const starter = starters.find((item) => item.title.trim().toLowerCase() === key);
+      if (starter && section.body.trim() === starterBodies[key]) return { ...section, body: starter.body };
+      return section;
+    }),
+  };
+}
+
+function withIconSocials(links: SocialLink[]) {
+  const next = Array.isArray(links) ? links.map((link) => ({ ...link })) : [];
+  for (const social of iconSocials) {
+    const found = next.some((link) => link.label.trim().toLowerCase() === social.name.toLowerCase());
+    if (!found) next.push({ label: social.name, url: "", hidden: false });
+  }
+  return next;
 }
 
 function asText(value: unknown) {
@@ -519,22 +553,47 @@ function normalizeResume(resume: ResumeContent): ResumeContent {
 }
 
 function normalizeFilters(filters: unknown): WorkFilterItem[] {
-  if (!Array.isArray(filters)) return [];
-  return filters.map((item) => {
-    if (typeof item === "string") return { label: item, hidden: false };
-    if (item && typeof item === "object") {
-      const record = item as { label?: unknown; hidden?: unknown };
-      return {
-        label: typeof record.label === "string" ? record.label : "",
-        hidden: Boolean(record.hidden),
-      };
-    }
-    return { label: "", hidden: false };
-  });
+  const items = Array.isArray(filters)
+    ? filters.map((item) => {
+        if (typeof item === "string") return { label: item, hidden: false };
+        if (item && typeof item === "object") {
+          const record = item as { label?: unknown; hidden?: unknown; all?: unknown };
+          return {
+            label: typeof record.label === "string" ? record.label : "",
+            hidden: Boolean(record.hidden),
+            all: Boolean(record.all),
+          };
+        }
+        return { label: "", hidden: false };
+      })
+    : [];
+  if (!items.some((item) => item.all)) {
+    items.unshift({ label: "All", hidden: false, all: true });
+  }
+  return items;
+}
+
+function asImage(value: unknown): AdminImage | null {
+  if (!value || typeof value !== "object") return null;
+  const record = value as { src?: unknown; name?: unknown; w?: unknown; h?: unknown };
+  if (typeof record.src !== "string" || !record.src) return null;
+  return {
+    src: record.src,
+    name: typeof record.name === "string" ? record.name : "",
+    w: typeof record.w === "number" ? record.w : 0,
+    h: typeof record.h === "number" ? record.h : 0,
+  };
 }
 
 function normalizeCase(item: CaseItem): CaseItem {
-  const raw = item as CaseItem & { category?: unknown; categories?: unknown };
+  const raw = item as CaseItem & {
+    category?: unknown;
+    categories?: unknown;
+    coverMobile?: unknown;
+    showOnHome?: unknown;
+    marqueeSource?: unknown;
+    marqueeCover?: unknown;
+  };
   const listed = Array.isArray(raw.categories) ? raw.categories : [];
   const previous =
     typeof raw.category === "string"
@@ -559,7 +618,12 @@ function normalizeCase(item: CaseItem): CaseItem {
     categories,
     year: item.year,
     status: item.status,
-    cover: item.cover,
+    cover: asImage(item.cover),
+    coverMobile: asImage(raw.coverMobile),
+    showOnHome: typeof raw.showOnHome === "boolean" ? raw.showOnHome : true,
+    marqueeSource:
+      raw.marqueeSource === "mobile" || raw.marqueeSource === "custom" ? raw.marqueeSource : "desktop",
+    marqueeCover: asImage(raw.marqueeCover),
     summary: item.summary,
     blocks: item.blocks,
   };

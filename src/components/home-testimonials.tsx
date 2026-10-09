@@ -115,7 +115,7 @@ function MobileStack({ items }: { items: HomeTestimonial[] }) {
     >
       {items.map((item, index) => (
         <article
-          key={item.name}
+          key={`${item.name}-${index}`}
           className="sticky flex flex-col justify-between gap-12 rounded-[12px] border border-[#E9EAEB] bg-[#1A1A1A] p-8"
           style={{ top: index * step, zIndex: index + 1 }}
         >
@@ -131,19 +131,19 @@ export function HomeTestimonials({ items }: { items: HomeTestimonial[] }) {
     <section>
       <MarqueeRow
         direction="rtl"
-        className="relative left-1/2 w-screen -translate-x-1/2 bg-[#E8B23D] py-2"
+        className="relative left-1/2 flex h-[50px] w-screen -translate-x-1/2 items-center bg-[#E8B23D] md:h-[100px]"
       >
-        <p className="font-tanker text-[24px] leading-[1.2] font-normal tracking-normal whitespace-nowrap text-black uppercase md:text-[40px]">
+        <p className="font-tanker text-[20px] leading-[1.2] font-normal tracking-normal whitespace-nowrap text-black uppercase md:text-[40px]">
           {marquee}
         </p>
       </MarqueeRow>
 
       <div className="py-16 md:py-20">
-        <MobileStack items={items} />
+        <MobileStack items={items.slice(0, 4)} />
         <div className="hidden md:grid md:grid-cols-3 md:items-stretch md:gap-6">
-          {items.map((item) => (
+          {items.slice(0, 6).map((item, index) => (
             <article
-              key={item.name}
+              key={`${item.name}-${index}`}
               className="flex h-full flex-col justify-between gap-12 rounded-[12px] border border-[#E9EAEB] bg-[#1A1A1A] p-8"
             >
               <CardBody item={item} />

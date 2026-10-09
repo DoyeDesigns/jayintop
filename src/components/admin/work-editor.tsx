@@ -11,7 +11,7 @@ const inputClass =
 export function WorkEditor() {
   const { content, setPath, mutate } = useAdminContent();
   const work = content.work;
-  const filters = useList<{ label: string; hidden: boolean }>("work.filters");
+  const filters = useList<{ label: string; hidden: boolean; all?: boolean }>("work.filters");
   const nameBeforeEdit = useRef("");
 
   const renameFilter = (previous: string, next: string) => {
@@ -59,7 +59,7 @@ export function WorkEditor() {
 
       <Subsection
         title="Filters"
-        hint="These are the checkboxes on each case study. A filter added there shows up here. Rename or remove it here. The first one shows everything. Hide takes a filter off the live page. Save to publish the change."
+        hint="All shows every project and can be hidden. The other filters are case studies. A filter added on a project shows up here. Rename or remove it here. Hide takes a filter off the live page. Save to publish the change."
       >
         <div className="flex flex-col gap-3">
           {filters.items.map((item, index) => (
@@ -96,16 +96,16 @@ export function WorkEditor() {
               <button
                 type="button"
                 aria-label="Remove"
+                disabled={item.all}
                 onClick={() => removeFilter(index)}
-                className="inline-flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-[6px] border border-[#373A41] text-brand-white hover:border-[#E2705F] hover:text-[#E2705F]"
+                className="inline-flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-[6px] border border-[#373A41] text-brand-white hover:border-[#E2705F] hover:text-[#E2705F] disabled:cursor-not-allowed disabled:opacity-30"
               >
                 <X className="size-4" aria-hidden />
               </button>
               <button
                 type="button"
-                disabled={index === 0}
                 onClick={() => filters.set(index, { ...item, hidden: !item.hidden })}
-                className="inline-flex h-8 shrink-0 cursor-pointer items-center justify-center rounded-[6px] border border-[#373A41] px-3 font-tanker text-[15px] leading-[1.2] font-normal tracking-normal text-brand-white hover:border-brand hover:text-brand disabled:cursor-not-allowed disabled:opacity-30"
+                className="inline-flex h-8 shrink-0 cursor-pointer items-center justify-center rounded-[6px] border border-[#373A41] px-3 font-tanker text-[15px] leading-[1.2] font-normal tracking-normal text-brand-white hover:border-brand hover:text-brand"
               >
                 {item.hidden ? "Show" : "Hide"}
               </button>

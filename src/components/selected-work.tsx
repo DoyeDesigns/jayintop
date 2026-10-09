@@ -15,14 +15,33 @@ export function SelectedWork({
   filters = [],
 }: {
   items: WorkItem[];
-  filters?: string[];
+  filters?: { label: string; all?: boolean }[];
 }) {
-  const options = filters.length ? filters : ["All"];
-  const [filter, setFilter] = useState(options[0]);
+  const options = filters.length ? filters : [{ label: "All", all: true }];
+  const [filter, setFilter] = useState(options[0].label);
   const [stuck, setStuck] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const sentinelRef = useRef<HTMLDivElement>(null);
-  const activeFilter = options.find((item) => item === filter) ?? options[0];
+  const barRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLUListElement>(null);
+  const firstFilter = useRef(true);
+  const active = options.find((item) => item.label === filter) ?? options[0];
+  const activeFilter = active.label;
+
+  useEffect(() => {
+    if (firstFilter.current) {
+      firstFilter.current = false;
+      return;
+    }
+    const list = listRef.current;
+    const bar = barRef.current;
+    if (!list || !bar) return;
+    const nav = window.matchMedia("(min-width: 768px)").matches ? 84 : 93;
+    const top = list.getBoundingClientRect().top + window.scrollY - nav - bar.offsetHeight;
+    if (window.scrollY > top) {
+      window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
+    }
+  }, [filter]);
 
   useEffect(() => {
     const sentinel = sentinelRef.current;
@@ -43,13 +62,16 @@ export function SelectedWork({
   }, []);
 
   const visible = items.filter((item) =>
-    matchesWorkFilter(item, filter, filter === options[0]),
+    matchesWorkFilter(item, active.label, Boolean(active.all)),
   );
+  const logoGrid = !active.all && /logo/i.test(active.label);
+  const useMenu = options.length > 4;
 
   return (
     <div className="mt-10">
       <div ref={sentinelRef} aria-hidden className="h-px" />
       <div
+        ref={barRef}
         className={`sticky top-[93px] z-30 md:top-[84px] ${
           stuck
             ? "bg-[#131313] bg-[url('/backgrounds/default.svg')] bg-cover bg-fixed bg-center"
@@ -57,7 +79,7 @@ export function SelectedWork({
         }`}
       >
         <div className="py-4">
-          <div className="relative md:hidden">
+          {useMenu ? <div className="relative md:hidden">
             <button
               type="button"
               aria-haspopup="listbox"
@@ -82,22 +104,22 @@ export function SelectedWork({
                   className="absolute top-[calc(100%+8px)] right-0 left-0 z-30 overflow-hidden rounded-[4px] border border-[#D5D7DA] bg-[#1A1A1A] py-1 px-3"
                 >
                   {options.map((item) => {
-                    const active = filter === item;
+                    const selected = filter === item.label;
                     return (
-                      <li key={item}>
+                      <li key={item.label}>
                         <button
                           type="button"
                           role="option"
-                          aria-selected={active}
+                          aria-selected={selected}
                           onClick={() => {
-                            setFilter(item);
+                            setFilter(item.label);
                             setMenuOpen(false);
                           }}
                           className={`flex w-full pr-3 py-2 text-left font-tanker text-[20px] leading-[1.2] font-normal tracking-normal uppercase ${
-                            active ? "text-brand" : "text-brand-white"
+                            selected ? "text-brand" : "text-brand-white"
                           }`}
                         >
-                          {item}
+                          {item.label}
                         </button>
                       </li>
                     );
@@ -105,34 +127,34 @@ export function SelectedWork({
                 </ul>
               </>
             ) : null}
-          </div>
+          </div> : null}
 
           <nav
             aria-label="Filter projects"
-            className={`hidden gap-6 overflow-x-auto md:flex ${
+            className={`${useMenu ? "hidden" : "flex"} flex-wrap justify-center gap-6 overflow-x-auto md:flex md:flex-nowrap ${
               stuck ? "md:justify-start" : "md:justify-center"
             }`}
           >
             {options.map((item) => {
-              const active = filter === item;
-              const stuckActive = stuck && active;
+              const selected = filter === item.label;
+              const stuckActive = stuck && selected;
               return (
                 <button
-                  key={item}
+                  key={item.label}
                   type="button"
-                  aria-pressed={active}
-                  onClick={() => setFilter(item)}
+                  aria-pressed={selected}
+                  onClick={() => setFilter(item.label)}
                   className={`${tabClass} ${
                     stuck
                       ? stuckActive
                         ? "border-transparent bg-brand px-[12px] text-brand-white"
                         : "border-transparent px-[12px] text-brand-white"
-                      : active
+                      : selected
                         ? "border-brand pr-[12px] pl-0 text-brand-white"
                         : "border-transparent pr-[12px] pl-0 text-brand-white"
                   }`}
                 >
-                  {item}
+                  {item.label}
                 </button>
               );
             })}
@@ -140,27 +162,41 @@ export function SelectedWork({
         </div>
       </div>
 
-      <ul className="mt-8 flex flex-col gap-12">
+      <ul
+        ref={listRef}
+        className={
+          logoGrid
+            ? "mt-8 grid grid-cols-2 gap-4 md:gap-6"
+            : "mt-8 flex flex-col gap-12"
+        }
+      >
         {visible.map((item) => (
           <li key={item.id}>
             <article>
               <Link href={`/selected-work/${item.id}`} className="block">
-              <div className="relative aspect-square w-full max-w-[370px] overflow-hidden rounded-lg bg-[#1A1A1A] md:aspect-[1380/640] md:max-w-none">
+              <div className="relative aspect-square w-full max-h-[370px] overflow-hidden rounded-lg bg-[#1A1A1A] md:aspect-[1380/640] md:max-w-none">
+                <ContentImage
+                  src={item.imageMobile || item.image}
+                  alt=""
+                  fill
+                  sizes="370px"
+                  className="object-cover md:hidden"
+                />
                 <ContentImage
                   src={item.image}
                   alt=""
                   fill
-                  sizes="(min-width: 768px) 1200px, 370px"
-                  className="object-cover"
+                  sizes="1200px"
+                  className="hidden object-cover md:block"
                 />
               </div>
               <div className="mt-4 flex flex-col items-start gap-1 text-left md:flex-row md:items-end md:justify-between">
                 <h2 className="font-tanker md:text-[40px] text-[20px] leading-[1.2] font-normal tracking-normal text-brand-white uppercase">
                   {item.title}
                 </h2>
-                <p className="font-bespoke md:text-[24px] text-[16px] leading-[1.5] font-normal tracking-normal text-brand-white">
+                {/* <p className="font-bespoke md:text-[24px] text-[16px] leading-[1.5] font-normal tracking-normal text-brand-white">
                   {item.category}
-                </p>
+                </p> */}
               </div>
               </Link>
             </article>

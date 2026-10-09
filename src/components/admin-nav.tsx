@@ -22,7 +22,7 @@ const sections = [
   {
     label: "Content",
     items: [
-      { label: "Case studies", href: "/admin/case-studies" },
+      { label: "All works", href: "/admin/case-studies" },
       { label: "Testimonials", href: "/admin/testimonials" },
       { label: "Settings", href: "/admin/settings" },
       { label: "How this works", href: "/admin/how-this-works" },

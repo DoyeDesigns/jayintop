@@ -20,15 +20,15 @@ export function HomeBelief({
     <section>
       <MarqueeRow
         direction="rtl"
-        className="relative left-1/2 w-screen -translate-x-1/2 bg-brand py-2"
+        className="relative left-1/2 flex h-[50px] w-screen -translate-x-1/2 items-center bg-brand text-brand-white md:h-[100px]"
       >
-        <p className="font-tanker md:text-[40px] text-[24px] leading-[1.2] font-normal tracking-normal whitespace-nowrap text-brand-white uppercase">
+        <p className="font-tanker text-[20px] leading-[1.2] font-normal tracking-normal whitespace-nowrap uppercase md:text-[40px]">
           {marquee}
         </p>
       </MarqueeRow>
 
-      <div className="-mx-4 bg-brand-white text-[#1A1A1A] md:-mx-[30px]">
-        <div className="flex w-full flex-col-reverse items-center gap-12 px-4 py-16 md:flex-row md:items-center md:justify-center md:gap-16 md:px-[30px] md:py-24">
+      <div className="relative left-1/2 w-screen -translate-x-1/2 bg-brand-white text-[#1A1A1A]">
+        <div className="mx-auto flex w-full max-w-[1380px] flex-col-reverse items-center gap-12 px-4 py-16 md:flex-row md:items-center md:justify-center md:gap-16 md:px-[30px] md:py-24">
           <div className="flex w-full flex-col items-start md:w-auto md:max-w-[640px]">
             <h2 className="font-tanker text-[40px] leading-[1.2] font-normal tracking-normal uppercase md:text-[60px]">
               {eyebrow}

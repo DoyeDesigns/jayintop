@@ -31,10 +31,16 @@ export function Footer({
           © {new Date().getFullYear()} Jayintop. All rights reserved.
         </p>
 
-        <ul className="order-2 flex items-center gap-5 md:order-3 md:justify-self-end">
+        <ul className="order-2 flex flex-wrap justify-center items-center gap-5 md:order-3 md:justify-self-end">
           {socials.map((social) => (
             <li key={social.name}>
-              <a href={social.href} aria-label={social.name} className="group inline-flex">
+              <a
+                href={social.href}
+                aria-label={social.name}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group inline-flex"
+              >
                 <span
                   className="h-6 w-6 bg-[#717680] mask-(--icon) mask-center mask-no-repeat mask-contain transition-colors duration-200 group-hover:bg-brand"
                   style={{ "--icon": `url("${social.src}")` } as CSSProperties}

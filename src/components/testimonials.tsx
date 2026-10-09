@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { MarqueeRow } from "@/components/marquee-row";
 import type { Testimonial } from "@/lib/testimonials";
 
 const quoteClass =
@@ -10,21 +11,6 @@ const nameClass =
 const roleClass =
   "font-inter text-[16px] leading-6 font-normal tracking-normal text-[#A4A7AE]";
 
-function MarqueeItem() {
-  return (
-    <span className="inline-flex shrink-0 items-center gap-8 pr-8">
-      <span>Testimonial // Testimonial</span>
-      <img
-        src="/logo-white.svg"
-        alt=""
-        width={22}
-        height={32}
-        className="h-8 w-[22px]"
-      />
-    </span>
-  );
-}
-
 function TestimonialCard({ quote, name, role }: Testimonial) {
   return (
     <article className="rounded-[12px] border border-[#E9EAEB] bg-[#272727] p-5">
@@ -32,16 +18,6 @@ function TestimonialCard({ quote, name, role }: Testimonial) {
       <p className={nameClass}>{name}</p>
       <p className={roleClass}>{role}</p>
     </article>
-  );
-}
-
-function Track({ hidden = false }: { hidden?: boolean }) {
-  return (
-    <div className="flex shrink-0" aria-hidden={hidden || undefined}>
-      {Array.from({ length: 6 }, (_, index) => (
-        <MarqueeItem key={index} />
-      ))}
-    </div>
   );
 }
 
@@ -66,12 +42,21 @@ export function Testimonials({
 
   return (
     <section className="relative left-1/2 w-screen -translate-x-1/2">
-      <div className="flex md:h-[100px] h-[50px] items-center overflow-hidden bg-brand text-brand-white">
-        <div className="flex w-max animate-[testimonial-marquee_28s_linear_infinite] font-tanker text-[20px] leading-[1.2] font-normal tracking-normal whitespace-nowrap uppercase md:text-[40px]">
-          <Track />
-          <Track hidden />
-        </div>
-      </div>
+      <MarqueeRow
+        direction="rtl"
+        className="flex h-[50px] items-center bg-brand text-brand-white md:h-[100px]"
+      >
+        <span className="inline-flex shrink-0 items-center gap-8 pr-8 font-tanker text-[20px] leading-[1.2] font-normal tracking-normal whitespace-nowrap uppercase md:text-[40px]">
+          <span>Testimonial // Testimonial</span>
+          <img
+            src="/logo-white.svg"
+            alt=""
+            width={22}
+            height={32}
+            className="h-8 w-[22px]"
+          />
+        </span>
+      </MarqueeRow>
 
       <div className="mx-auto w-full max-w-[1380px] px-4 py-10 md:px-[30px] md:py-16">
         <div className="flex flex-col gap-4 md:flex-row md:items-start">

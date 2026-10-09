@@ -82,9 +82,16 @@ export function SettingsEditor() {
                 onChange={(url) => socials.set(index, { ...link, url })}
               />
             </div>
+            <button
+              type="button"
+              onClick={() => socials.set(index, { ...link, hidden: !link.hidden })}
+              className="inline-flex h-8 w-fit cursor-pointer items-center justify-center rounded-[6px] border border-[#373A41] px-3 font-tanker text-[15px] leading-[1.2] font-normal tracking-normal text-brand-white hover:border-brand hover:text-brand"
+            >
+              {link.hidden ? "Show" : "Hide"}
+            </button>
           </div>
         ))}
-        <AddButton onClick={() => socials.add({ label: "", url: "" })}>
+        <AddButton onClick={() => socials.add({ label: "", url: "", hidden: false })}>
           Add link
         </AddButton>
       </Subsection>

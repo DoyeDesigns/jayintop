@@ -29,7 +29,7 @@ export function DashboardEditor() {
   }, []);
   const live = content.cases.filter((item) => item.status === "published").length;
   const missingCovers = content.cases.filter((item) => !item.cover).length;
-  const emptySocials = content.site.socials.filter((link) => !link.url).length;
+  const emptySocials = content.site.socials.filter((link) => !link.hidden && !link.url).length;
 
   const stats = [
     { label: "Live Case Studies", value: live, highlight: true },

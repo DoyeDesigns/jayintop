@@ -42,6 +42,74 @@ export function Subsection({
   );
 }
 
+function wrapSelection(
+  id: string,
+  value: string,
+  onChange: (value: string) => void,
+  before: string,
+  after: string,
+) {
+  const field = document.getElementById(id) as HTMLInputElement | HTMLTextAreaElement | null;
+  const start = field?.selectionStart ?? value.length;
+  const end = field?.selectionEnd ?? value.length;
+  const selected = value.slice(start, end) || "text";
+  const next = `${value.slice(0, start)}${before}${selected}${after}${value.slice(end)}`;
+  onChange(next);
+  const cursor = start + before.length + selected.length + after.length;
+  requestAnimationFrame(() => {
+    field?.focus();
+    field?.setSelectionRange(cursor, cursor);
+  });
+}
+
+function FormatBar({
+  id,
+  value,
+  onChange,
+}: {
+  id: string;
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  const [color, setColor] = useState("#F9A000");
+
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      <button
+        type="button"
+        onClick={() => wrapSelection(id, value, onChange, "**", "**")}
+        className="inline-flex h-8 cursor-pointer items-center rounded-[6px] border border-[#373A41] px-3 font-inter text-[14px] font-bold text-brand-white hover:border-brand"
+      >
+        Bold
+      </button>
+      <button
+        type="button"
+        onClick={() => wrapSelection(id, value, onChange, "_", "_")}
+        className="inline-flex h-8 cursor-pointer items-center rounded-[6px] border border-[#373A41] px-3 font-inter text-[14px] italic text-brand-white hover:border-brand"
+      >
+        Italic
+      </button>
+      <label className="inline-flex h-8 cursor-pointer items-center gap-2 rounded-[6px] border border-[#373A41] px-2 font-inter text-[14px] text-brand-white hover:border-brand">
+        <input
+          type="color"
+          value={color}
+          aria-label="Text color"
+          onChange={(event) => setColor(event.target.value)}
+          className="size-5 cursor-pointer border-0 bg-transparent p-0"
+        />
+        Color
+      </label>
+      <button
+        type="button"
+        onClick={() => wrapSelection(id, value, onChange, `{{${color}}}`, "{{/}}")}
+        className="inline-flex h-8 cursor-pointer items-center rounded-[6px] border border-[#373A41] px-3 font-inter text-[14px] text-brand-white hover:border-brand"
+      >
+        Apply color
+      </button>
+    </div>
+  );
+}
+
 function Label({
   label,
   required,
@@ -73,6 +141,7 @@ export function TextField({
   help,
   required,
   max,
+  format = false,
 }: {
   label: string;
   value: string;
@@ -80,6 +149,7 @@ export function TextField({
   help?: string;
   required?: boolean;
   max?: number;
+  format?: boolean;
 }) {
   const id = useId();
   const helpId = `${id}-help`;
@@ -87,6 +157,7 @@ export function TextField({
   return (
     <div className="flex flex-col gap-2">
       <Label label={label} required={required} htmlFor={id} />
+      {format ? <FormatBar id={id} value={value} onChange={onChange} /> : null}
       <input
         id={id}
         type="text"
@@ -113,6 +184,7 @@ export function AreaField({
   help,
   required,
   rows = 4,
+  format = false,
 }: {
   label: string;
   value: string;
@@ -120,6 +192,7 @@ export function AreaField({
   help?: string;
   required?: boolean;
   rows?: number;
+  format?: boolean;
 }) {
   const id = useId();
   const helpId = `${id}-help`;
@@ -127,6 +200,7 @@ export function AreaField({
   return (
     <div className="flex flex-col gap-2">
       <Label label={label} required={required} htmlFor={id} />
+      {format ? <FormatBar id={id} value={value} onChange={onChange} /> : null}
       <textarea
         id={id}
         value={value}

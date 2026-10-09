@@ -6,15 +6,17 @@ export const socials = [
   { name: "Instagram", src: "/social-icons/instagram.svg" },
   { name: "Dribbble", src: "/social-icons/dribble.svg" },
   { name: "WhatsApp", src: "/social-icons/whatsapp.svg" },
+  { name: "Telegram", src: "/social-icons/telegram.svg" },
+  { name: "Behance", src: "/social-icons/behance.svg" },
 ];
 
-export function linkedSocials(links: { label: string; url: string }[]) {
-  return socials.map((social) => {
+export function linkedSocials(links: { label: string; url: string; hidden?: boolean }[]) {
+  return socials.flatMap((social) => {
     const match = links.find(
-      (link) =>
-        link.label.trim().toLowerCase() === social.name.toLowerCase() &&
-        link.url.trim(),
+      (link) => link.label.trim().toLowerCase() === social.name.toLowerCase(),
     );
-    return { ...social, href: match?.url.trim() || "#" };
+    if (match?.hidden) return [];
+    const url = match?.url.trim();
+    return [{ ...social, href: url || "#" }];
   });
 }

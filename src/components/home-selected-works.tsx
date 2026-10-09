@@ -2,14 +2,15 @@
 
 import Link from "next/link";
 import { ContentImage } from "@/components/content-image";
+import { useMarqueeRepeat } from "@/components/marquee-row";
 import { useEffect, useRef, useState, type RefObject } from "react";
 import type { WorkItem } from "@/lib/work";
 
 const SPEED = 48;
-const rulerPhrase = "Selected work // ".repeat(8);
+const rulerPhrase = "Selected work // ";
 
 function wrap(value: number, width: number) {
-  if (width <= 0) return value;
+  if (width <= 0) return 0;
   const next = value % width;
   return next > 0 ? next - width : next;
 }
@@ -27,7 +28,7 @@ function ProjectCard({
         href={`/selected-work/${item.id}`}
         tabIndex={hidden ? -1 : undefined}
         draggable={false}
-        className="group relative block h-[668px] w-[494px] overflow-hidden"
+        className="group relative block h-[240px] w-[178px] overflow-hidden md:h-[668px] md:w-[494px]"
       >
         {item.image ? (
           <ContentImage
@@ -42,7 +43,7 @@ function ProjectCard({
         )}
         <span className="absolute inset-0 z-10 flex items-center justify-center bg-black/0 transition-colors duration-300 group-hover:bg-black/40 group-focus-visible:bg-black/40">
           <span
-            className={`px-6 text-center font-inter text-[35px] leading-none font-medium text-[#DEDAD2] transition-opacity duration-300 group-hover:opacity-100 group-focus-visible:opacity-100 ${item.image ? "opacity-0" : "opacity-100"}`}
+            className={`px-3 text-center font-inter text-[18px] leading-none font-medium text-[#DEDAD2] transition-opacity duration-300 group-hover:opacity-100 group-focus-visible:opacity-100 md:px-6 md:text-[35px] ${item.image ? "opacity-0" : "opacity-100"}`}
           >
             {item.title}
           </span>
@@ -52,20 +53,20 @@ function ProjectCard({
   );
 }
 
-function Loop({
+function Sequence({
   items,
   hidden = false,
-  loopRef,
+  unitRef,
 }: {
   items: WorkItem[];
   hidden?: boolean;
-  loopRef?: RefObject<HTMLUListElement | null>;
+  unitRef?: RefObject<HTMLUListElement | null>;
 }) {
   return (
     <ul
-      ref={loopRef}
+      ref={unitRef}
       aria-hidden={hidden || undefined}
-      className="flex h-full items-center gap-5 pr-5"
+      className="flex h-full shrink-0 items-center gap-3 pr-3 md:gap-5 md:pr-5"
     >
       {items.map((item) => (
         <ProjectCard key={item.id} item={item} hidden={hidden} />
@@ -75,8 +76,12 @@ function Loop({
 }
 
 function Ruler() {
+  const viewportRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
-  const loopRef = useRef<HTMLSpanElement>(null);
+  const loopRef = useRef<HTMLDivElement>(null);
+  const unitRef = useRef<HTMLSpanElement>(null);
+  const repeat = useMarqueeRepeat(viewportRef, unitRef);
+  const copies = Array.from({ length: repeat }, (_, index) => index);
 
   useEffect(() => {
     const track = trackRef.current;
@@ -105,8 +110,9 @@ function Ruler() {
 
   return (
     <div
+      ref={viewportRef}
       aria-hidden
-      className="pointer-events-none relative z-20 h-[64px] w-[255%] shrink-0 overflow-hidden bg-[rgba(54,54,54,0.3)] md:h-[93px] md:w-[170%]"
+      className="pointer-events-none relative z-20 h-[36px] w-[255%] shrink-0 overflow-hidden bg-[rgba(54,54,54,0.3)] md:h-[93px] md:w-[170%]"
       style={{
         transform: "perspective(1200px) rotateX(35deg) rotateY(20.6deg)",
         maskImage:
@@ -115,17 +121,29 @@ function Ruler() {
     >
       <div
         ref={trackRef}
-        className="flex h-full w-max items-center will-change-transform"
+        className="flex h-full w-max shrink-0 items-center will-change-transform"
       >
-        <span
-          ref={loopRef}
-          className="font-tanker text-[40px] leading-none font-normal tracking-normal whitespace-nowrap text-[#DEDAD2] uppercase md:text-[81px]"
-        >
-          {rulerPhrase}
-        </span>
-        <span className="font-tanker text-[40px] leading-none font-normal tracking-normal whitespace-nowrap text-[#DEDAD2] uppercase md:text-[81px]">
-          {rulerPhrase}
-        </span>
+        <div ref={loopRef} className="flex shrink-0">
+          {copies.map((index) => (
+            <span
+              key={index}
+              ref={index === 0 ? unitRef : undefined}
+              className="font-tanker text-[20px] leading-none font-normal tracking-normal whitespace-nowrap text-[#DEDAD2] uppercase md:text-[81px]"
+            >
+              {rulerPhrase}
+            </span>
+          ))}
+        </div>
+        <div className="flex shrink-0">
+          {copies.map((index) => (
+            <span
+              key={index}
+              className="font-tanker text-[20px] leading-none font-normal tracking-normal whitespace-nowrap text-[#DEDAD2] uppercase md:text-[81px]"
+            >
+              {rulerPhrase}
+            </span>
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -135,9 +153,11 @@ export function HomeSelectedWorks({ items }: { items: WorkItem[] }) {
   const projects = items;
   const viewportRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
-  const loopRef = useRef<HTMLUListElement>(null);
+  const loopRef = useRef<HTMLDivElement>(null);
+  const unitRef = useRef<HTMLUListElement>(null);
+  const repeat = useMarqueeRepeat(viewportRef, unitRef, projects.length);
+  const copies = Array.from({ length: repeat }, (_, index) => index);
   const offset = useRef(0);
-  const paused = useRef(false);
   const dragging = useRef(false);
   const moved = useRef(false);
   const velocity = useRef(0);
@@ -171,7 +191,7 @@ export function HomeSelectedWorks({ items }: { items: WorkItem[] }) {
       if (!dragging.current && Math.abs(velocity.current) > 20) {
         apply(offset.current + velocity.current * dt);
         velocity.current *= Math.pow(0.04, dt);
-      } else if (!reduced && !paused.current && !dragging.current) {
+      } else if (!reduced && !dragging.current) {
         velocity.current = 0;
         apply(offset.current - SPEED * dt);
       }
@@ -191,7 +211,7 @@ export function HomeSelectedWorks({ items }: { items: WorkItem[] }) {
       cancelAnimationFrame(frame);
       viewport.removeEventListener("wheel", onWheel);
     };
-  }, []);
+  }, [projects.length]);
 
   if (projects.length === 0) return null;
 
@@ -203,7 +223,7 @@ export function HomeSelectedWorks({ items }: { items: WorkItem[] }) {
       <Ruler />
       <Ruler />
       <div
-        className="-mt-[30px] h-[500px] w-[255%] shrink-0 md:-mt-[40px] md:h-[660px] md:w-[170%]"
+        className="-mt-[14px] h-[300px] w-[255%] shrink-0 md:-mt-[40px] md:h-[660px] md:w-[170%]"
         style={{
           transform: "perspective(1200px) rotateX(20deg) rotateY(20deg)",
         }}
@@ -211,12 +231,6 @@ export function HomeSelectedWorks({ items }: { items: WorkItem[] }) {
         <div
           ref={viewportRef}
           className="h-full w-full cursor-grab touch-pan-y overflow-hidden active:cursor-grabbing"
-          onPointerEnter={() => {
-            paused.current = true;
-          }}
-          onPointerLeave={() => {
-            paused.current = false;
-          }}
           onPointerDown={(event) => {
             if (event.button !== 0) return;
             dragging.current = true;
@@ -262,10 +276,22 @@ export function HomeSelectedWorks({ items }: { items: WorkItem[] }) {
         >
           <div
             ref={trackRef}
-            className="flex h-full w-max items-center will-change-transform"
+            className="flex h-full w-max shrink-0 items-center will-change-transform"
           >
-            <Loop items={projects} loopRef={loopRef} />
-            <Loop items={projects} hidden />
+            <div ref={loopRef} className="flex h-full shrink-0">
+              {copies.map((index) => (
+                <Sequence
+                  key={index}
+                  items={projects}
+                  unitRef={index === 0 ? unitRef : undefined}
+                />
+              ))}
+            </div>
+            <div className="flex h-full shrink-0" aria-hidden>
+              {copies.map((index) => (
+                <Sequence key={index} items={projects} hidden />
+              ))}
+            </div>
           </div>
         </div>
       </div>

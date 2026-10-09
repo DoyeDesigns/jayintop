@@ -1,8 +1,14 @@
 import type { AdminContent, CaseItem, ContentBlock } from "@/lib/admin-content";
 import type { WorkFilter, WorkImage, WorkItem, WorkSection } from "@/lib/work";
 
-function coverFor(item: CaseItem) {
-  return item.cover?.src ?? "";
+function imageSrc(image: CaseItem["cover"]) {
+  return image?.src ?? "";
+}
+
+function marqueeSrc(item: CaseItem) {
+  if (item.marqueeSource === "mobile") return imageSrc(item.coverMobile) || imageSrc(item.cover);
+  if (item.marqueeSource === "custom") return imageSrc(item.marqueeCover) || imageSrc(item.cover);
+  return imageSrc(item.cover);
 }
 
 function filtersFor(categories: string[]): Exclude<WorkFilter, "all">[] {
@@ -64,7 +70,7 @@ function sectionsFrom(item: CaseItem): WorkSection[] {
 
   if (current) sections.push(current);
 
-  const cover = coverFor(item);
+  const cover = imageSrc(item.cover);
 
   if (sections.length === 0) {
     return [
@@ -94,11 +100,20 @@ export function publishedWork(content: AdminContent): WorkItem[] {
       client: item.client,
       director: item.role,
       filters: filtersFor(item.categories),
-      image: coverFor(item),
+      image: imageSrc(item.cover),
+      imageMobile: imageSrc(item.coverMobile) || imageSrc(item.cover),
+      showOnHome: item.showOnHome,
+      marqueeImage: marqueeSrc(item),
       sections: sectionsFrom(item),
     }));
 
   return items;
+}
+
+export function homeMarqueeWork(content: AdminContent): WorkItem[] {
+  return publishedWork(content)
+    .filter((item) => item.showOnHome)
+    .map((item) => ({ ...item, image: item.marqueeImage || item.image }));
 }
 
 export function projectNeighbors(items: WorkItem[], slug: string) {

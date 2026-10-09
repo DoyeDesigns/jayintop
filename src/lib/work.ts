@@ -22,5 +22,8 @@ export type WorkItem = {
   director: string;
   filters: Exclude<WorkFilter, "all">[];
   image: string;
+  imageMobile: string;
+  showOnHome: boolean;
+  marqueeImage: string;
   sections: WorkSection[];
 };

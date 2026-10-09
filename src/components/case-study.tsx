@@ -70,15 +70,23 @@ export function CaseStudy({
 }) {
   return (
     <article className="flex flex-col gap-10">
-      {project.image ? (
-        <div className="relative aspect-[1380/640] overflow-hidden rounded-lg">
+      {project.image || project.imageMobile ? (
+        <div className="relative aspect-square overflow-hidden rounded-lg md:aspect-[1380/640]">
+          <ContentImage
+            src={project.imageMobile || project.image}
+            alt=""
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover md:hidden"
+          />
           <ContentImage
             src={project.image}
             alt=""
             fill
             priority
-            sizes="(min-width: 768px) 1120px, 100vw"
-            className="object-cover"
+            sizes="1120px"
+            className="hidden object-cover md:block"
           />
         </div>
       ) : null}

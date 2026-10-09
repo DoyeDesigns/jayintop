@@ -26,7 +26,7 @@ const blockTypes: ContentBlock["type"][] = ["text", "image", "pair", "video", "q
 
 function categoryChoices(filters: WorkFilterItem[], selected: string[]) {
   const options = filters
-    .slice(1)
+    .filter((item) => !item.all)
     .map((item) => item.label.trim())
     .filter(Boolean);
   const extras = selected.filter(
@@ -57,9 +57,9 @@ export function CaseEditor({ id }: { id: string }) {
   const path = `cases.${index}`;
 
   const addCategory = (name: string) => {
-    const all = content.work.filters[0]?.label.trim().toLowerCase();
+    const all = content.work.filters.find((entry) => entry.all)?.label.trim().toLowerCase();
     if (all && name.toLowerCase() === all) {
-      window.alert("That name shows every project. Use a specific category.");
+      window.alert("All already shows every project. Use a specific category.");
       return;
     }
     mutate((draft) => {
@@ -67,7 +67,9 @@ export function CaseEditor({ id }: { id: string }) {
       const existing = filters.find((entry) => entry.label.trim().toLowerCase() === name.toLowerCase());
       const label = existing?.label.trim() || name;
       if (!existing) {
-        if (filters.length === 0) filters.push({ label: "All case studies", hidden: false });
+        if (!filters.some((entry) => entry.all)) {
+          filters.unshift({ label: "All", hidden: false, all: true });
+        }
         filters.push({ label: name, hidden: false });
       }
       const current = draft.cases.find((entry) => entry.id === id);
@@ -181,11 +183,46 @@ export function CaseEditor({ id }: { id: string }) {
           onChange={(value) => set("summary", value)}
         />
         <ImageField
-          label="Cover image"
-          help="Shown on the work list. Landscape works best."
+          label="Desktop cover"
+          help="Shown on the work list on desktop. Landscape works best. This is also the default image for the homepage marquee."
           value={item.cover}
           onChange={(cover) => set("cover", cover)}
         />
+        <ImageField
+          label="Mobile cover"
+          help="Shown on the work list on mobile. A square image works best."
+          value={item.coverMobile}
+          onChange={(coverMobile) => set("coverMobile", coverMobile)}
+        />
+        <label className="flex cursor-pointer items-center gap-3">
+          <input
+            type="checkbox"
+            checked={item.showOnHome}
+            onChange={(event) => set("showOnHome", event.target.checked)}
+            className="size-5 accent-[#f26a22]"
+          />
+          <span className="font-tanker text-[20px] leading-[1.2] font-normal tracking-normal text-brand-white uppercase">
+            Show on the homepage marquee
+          </span>
+        </label>
+        <SelectField
+          label="Homepage marquee image"
+          value={item.marqueeSource}
+          onChange={(value) => set("marqueeSource", value as typeof item.marqueeSource)}
+          options={[
+            { value: "desktop", label: "Desktop cover" },
+            { value: "mobile", label: "Mobile cover" },
+            { value: "custom", label: "Specific image" },
+          ]}
+        />
+        {item.marqueeSource === "custom" ? (
+          <ImageField
+            label="Marquee image"
+            help="Used only in the homepage 3D marquee."
+            value={item.marqueeCover}
+            onChange={(marqueeCover) => set("marqueeCover", marqueeCover)}
+          />
+        ) : null}
         <SelectField
           label="Status"
           required
