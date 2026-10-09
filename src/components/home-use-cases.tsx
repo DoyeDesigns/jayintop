@@ -36,14 +36,17 @@ const CARD_POS_MAX = 72;
 
 /** Shared pace so corner cards and the middle stack start and finish together. */
 const PACE = {
-  out: 340,
-  gap: 40,
-  in: 640,
+  out: 300,
+  gap: 0,
+  in: 520,
 } as const;
-/** Steady exit — no ease-out crawl that looks like a mid-slide hook. */
-const EXIT_EASE = "cubic-bezier(0.4, 0, 0.6, 1)";
-const ENTER_EASE = "cubic-bezier(0.33, 1, 0.68, 1)";
+/** Accelerate out — decelerating into the exit end reads as a mid-slide hang. */
+const EXIT_EASE = "cubic-bezier(0.55, 0, 1, 1)";
+/** Settle in without an overshoot hitch. */
+const ENTER_EASE = "cubic-bezier(0.22, 1, 0.36, 1)";
 const PACE_EASE = ENTER_EASE;
+const SLIDE = `transform ${PACE.out}ms ${EXIT_EASE}`;
+const SETTLE = `transform ${PACE.in}ms ${ENTER_EASE}, opacity ${PACE.in}ms ${ENTER_EASE}`;
 
 type CardPose = {
   top: number;
@@ -215,14 +218,14 @@ type StackMotion = {
   transition: string;
 };
 
-function restMotion(depth: number, total: number): StackMotion {
+function restMotion(depth: number, total: number, transition = SETTLE): StackMotion {
   const front = depth === 0;
   return {
     y: front ? 0 : -STACK_Y * depth,
     z: front ? 0 : -STACK_Z * depth,
     opacity: 1,
     zIndex: total - depth,
-    transition: `transform ${PACE.in}ms ${ENTER_EASE}`,
+    transition,
   };
 }
 
@@ -254,8 +257,9 @@ function CategoryCard({
           : {
               zIndex: motion.zIndex,
               opacity: motion.opacity,
-              transform: `translateX(-50%) translateY(${motion.y}rem) translateZ(${motion.z}rem)`,
+              transform: `translate3d(-50%, ${motion.y}rem, ${motion.z}rem)`,
               transition: motion.transition,
+              willChange: "transform, opacity",
               pointerEvents: motion.opacity < 0.5 ? "none" : "auto",
             }
       }
@@ -341,30 +345,23 @@ function motionForCard(
 
   const { dir, from, to, mover, phase } = anim;
   const isMover = index === mover;
-  const exit = `transform ${PACE.out}ms ${EXIT_EASE}`;
-  const enter = `transform ${PACE.in}ms ${ENTER_EASE}, opacity ${PACE.in}ms ${ENTER_EASE}`;
 
   if (dir === "next") {
     if (!isMover) {
-      const depth = phase === 0 ? depthFrom(index, from) : depthFrom(index, to);
-      if (phase === 0 && depth === 1) {
-        return {
-          ...restMotion(1, total),
-          zIndex: total - 1,
-          transition: exit,
-        };
-      }
-      return { ...restMotion(depth, total), transition: enter };
+      // Shift the stack to its final depths while the front card exits,
+      // so nothing sits still mid-sequence.
+      const depth = depthFrom(index, to);
+      return restMotion(depth, total, phase === 0 ? SLIDE : SETTLE);
     }
 
-    const back = restMotion(last, total);
+    const back = restMotion(last, total, SETTLE);
     if (phase === 0) {
       return {
         y: 10,
         z: 0,
         opacity: 1,
         zIndex: total + 2,
-        transition: exit,
+        transition: SLIDE,
       };
     }
     if (phase === 1) {
@@ -380,29 +377,28 @@ function motionForCard(
       ...back,
       opacity: 1,
       zIndex: 1,
-      transition: enter,
+      transition: SETTLE,
     };
   }
 
+  // prev — incoming card rises from below; stack settles to `to` in parallel
   if (!isMover) {
-    const depth = phase < 2 ? depthFrom(index, from) : depthFrom(index, to);
-    const motion = restMotion(depth, total);
-    if (phase < 2 && depthFrom(index, from) === 0) {
-      return { ...motion, zIndex: total + 1, transition: exit };
+    const depth = depthFrom(index, to);
+    const motion = restMotion(depth, total, phase === 0 ? SLIDE : SETTLE);
+    if (phase === 0 && depthFrom(index, from) === 0) {
+      return { ...motion, zIndex: total + 1 };
     }
-    // Keep natural stack order — do not flatten z-index or the new last
-    // card flashes above the card in front of it for a frame.
-    return { ...motion, transition: phase < 2 ? exit : enter };
+    return motion;
   }
 
-  const back = restMotion(last, total);
+  const back = restMotion(last, total, SETTLE);
   if (phase === 0) {
     return {
       y: back.y - 10,
       z: back.z,
       opacity: 1,
       zIndex: 0,
-      transition: exit,
+      transition: SLIDE,
     };
   }
   if (phase === 1) {
@@ -419,7 +415,7 @@ function motionForCard(
     z: 0,
     opacity: 1,
     zIndex: total + 2,
-    transition: enter,
+    transition: SETTLE,
   };
 }
 
@@ -445,15 +441,34 @@ export function HomeUseCases({
 
   useEffect(() => {
     if (!anim) return;
-    const waits = [PACE.out, PACE.gap, PACE.in] as const;
+
+    // Phase 0 → 1 after the exit finishes.
+    if (anim.phase === 0) {
+      const timer = window.setTimeout(() => {
+        setAnim({ ...anim, phase: 1 });
+      }, PACE.out);
+      return () => window.clearTimeout(timer);
+    }
+
+    // Phase 1 teleports with transition:none — paint that frame before enter
+    // so the browser does not blend exit and enter into one hitchy tween.
+    if (anim.phase === 1) {
+      let raf2 = 0;
+      const raf1 = window.requestAnimationFrame(() => {
+        raf2 = window.requestAnimationFrame(() => {
+          setAnim({ ...anim, phase: 2 });
+        });
+      });
+      return () => {
+        window.cancelAnimationFrame(raf1);
+        window.cancelAnimationFrame(raf2);
+      };
+    }
+
     const timer = window.setTimeout(() => {
-      if (anim.phase < 2) {
-        setAnim({ ...anim, phase: (anim.phase + 1) as 0 | 1 | 2 });
-        return;
-      }
       setActive(anim.to);
       setAnim(null);
-    }, waits[anim.phase]);
+    }, PACE.in);
     return () => window.clearTimeout(timer);
   }, [anim]);
 
