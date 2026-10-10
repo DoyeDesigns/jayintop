@@ -221,7 +221,6 @@ export function HomeSelectedWorks({ items }: { items: WorkItem[] }) {
       className={`relative left-1/2 flex w-screen -translate-x-1/2 flex-col items-center overflow-hidden py-10 transition-opacity duration-700 md:py-20 ${visible ? "opacity-100" : "opacity-0"}`}
     >
       <Ruler />
-      <Ruler />
       <div
         className="-mt-[14px] h-[300px] w-[255%] shrink-0 md:-mt-[40px] md:h-[660px] md:w-[170%]"
         style={{

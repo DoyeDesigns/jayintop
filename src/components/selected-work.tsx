@@ -186,6 +186,7 @@ export function SelectedWork({
                   src={item.image}
                   alt=""
                   fill
+                  height={640}
                   sizes="1200px"
                   className="hidden object-cover md:block"
                 />
