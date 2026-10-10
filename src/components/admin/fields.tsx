@@ -591,14 +591,14 @@ export function CategoryChecks({
   return (
     <div className="flex flex-col gap-3">
       <p className="font-tanker text-[20px] leading-[1.2] font-normal tracking-normal text-brand-white uppercase">
-        Filters
+        Categories
       </p>
       <p className="font-inter text-[14px] leading-[20px] font-normal text-[#94979C]">
-        Tick every filter that applies. A new one is added to Work, where you rename or remove it.
+        Tick every category that applies. These are the same filters used on Selected work and What I do. Add one here and it shows everywhere after you save.
       </p>
       {options.length === 0 ? (
         <p className="font-inter text-[14px] leading-[20px] text-[#94979C]">
-          No filters yet. Add one below.
+          No categories yet. Add one below.
         </p>
       ) : (
         <ul className="flex flex-col gap-3">
@@ -633,7 +633,7 @@ export function CategoryChecks({
         <input
           type="text"
           value={name}
-          placeholder="New filter"
+          placeholder="New category"
           onChange={(event) => setName(event.target.value)}
           onKeyDown={(event) => {
             if (event.key === "Enter") {
@@ -643,7 +643,7 @@ export function CategoryChecks({
           }}
           className={`${inputClass} h-10 md:max-w-[360px]`}
         />
-        <AddButton onClick={add}>Add filter</AddButton>
+        <AddButton onClick={add}>Add category</AddButton>
       </div>
     </div>
   );

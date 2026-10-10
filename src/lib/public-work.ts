@@ -127,25 +127,14 @@ export function projectNeighbors(items: WorkItem[], slug: string) {
   };
 }
 
-function categoryMatches(category: string, label: string) {
-  const name = category.toLowerCase();
-  const text = label.toLowerCase();
-  if (name === text) return true;
-  if ((text.includes("logo") || text.includes("brand")) && /logo|brand|identity/.test(name)) {
-    return true;
-  }
-  if ((text.includes("product") || text.includes("ui")) && /product|ui|ux/.test(name)) {
-    return true;
-  }
-  if (text.includes("pack") && name.includes("pack")) return true;
-  return text
-    .split(/\W+/)
-    .filter((word) => word.length > 3)
-    .some((word) => name.includes(word));
-}
-
 export function matchesWorkFilter(item: WorkItem, label: string, isAll: boolean) {
   if (isAll) return true;
-  const names = item.categories.length ? item.categories : item.category ? [item.category] : [];
-  return names.some((name) => categoryMatches(name, label));
+  const target = label.trim().toLowerCase();
+  if (!target) return false;
+  const names = item.categories.length
+    ? item.categories
+    : item.category
+      ? [item.category]
+      : [];
+  return names.some((name) => name.trim().toLowerCase() === target);
 }

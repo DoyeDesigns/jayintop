@@ -510,7 +510,7 @@ export function mergeContent(base: AdminContent, saved: unknown): AdminContent {
   const home = normalizeHome(merged.home);
   return {
     ...merged,
-    cases: merged.cases.map(normalizeCase),
+    cases: merged.cases.map((item) => normalizeCase(item, filters)),
     about: normalizeAbout(merged.about),
     home: {
       ...home,
@@ -606,7 +606,7 @@ export function syncServicesToFilters(
     .map((item) => {
       const existing = byTitle.get(item.label.trim().toLowerCase());
       return {
-        title: item.label,
+        title: item.label.trim(),
         copy: existing?.copy ?? "",
         image: existing?.image ?? null,
         corners: normalizeCorners(existing?.corners),
@@ -618,6 +618,174 @@ export function categoryFilterEntries(filters: WorkFilterItem[]) {
   return filters
     .map((item, index) => ({ item, index }))
     .filter(({ item }) => !item.all);
+}
+
+function filterKey(label: string) {
+  return label.trim().toLowerCase();
+}
+
+function ensureAllFilter(filters: WorkFilterItem[]) {
+  if (!filters.some((item) => item.all)) {
+    filters.unshift({ label: "All", hidden: false, all: true });
+  }
+}
+
+function uniqueFilterLabel(draft: AdminContent, base: string) {
+  const root = base.trim() || "New category";
+  let label = root;
+  let n = 2;
+  while (
+    draft.work.filters.some(
+      (entry) => !entry.all && filterKey(entry.label) === filterKey(label),
+    )
+  ) {
+    label = `${root} ${n}`;
+    n += 1;
+  }
+  return label;
+}
+
+/**
+ * Single write path for Work filters / project categories.
+ * Used by case editor, work editor, and home What I do.
+ */
+export function upsertWorkFilter(draft: AdminContent, rawName: string): string | null {
+  const name = rawName.trim();
+  if (!name) return null;
+
+  ensureAllFilter(draft.work.filters);
+  const all = draft.work.filters.find((entry) => entry.all);
+  if (all && filterKey(all.label) === filterKey(name)) return null;
+
+  const existing = draft.work.filters.find(
+    (entry) => !entry.all && filterKey(entry.label) === filterKey(name),
+  );
+  const label = existing?.label.trim() || name;
+  if (!existing) {
+    draft.work.filters.push({ label, hidden: false, all: false });
+  }
+  draft.home.services = syncServicesToFilters(draft.home.services, draft.work.filters);
+  return label;
+}
+
+/** Always creates a new filter row (unique label). */
+export function createWorkFilter(draft: AdminContent, baseName = "New category"): string {
+  ensureAllFilter(draft.work.filters);
+  const label = uniqueFilterLabel(draft, baseName);
+  draft.work.filters.push({ label, hidden: false, all: false });
+  draft.home.services = syncServicesToFilters(draft.home.services, draft.work.filters);
+  return label;
+}
+
+export function renameWorkFilterAt(
+  draft: AdminContent,
+  index: number,
+  nextLabel: string,
+  sessionFrom = "",
+): boolean {
+  const filters = draft.work.filters;
+  const current = filters[index];
+  if (!current) return false;
+
+  if (current.all) {
+    current.label = nextLabel.trim() || "All";
+    return true;
+  }
+
+  const previous = current.label;
+  const to = nextLabel.trim();
+  if (to) {
+    const clash = filters.find(
+      (entry, i) => i !== index && !entry.all && filterKey(entry.label) === filterKey(to),
+    );
+    if (clash) return false;
+  }
+
+  current.label = nextLabel;
+
+  // Keep project categories aligned while typing, even if the field was cleared
+  // mid-edit (sessionFrom is the name when the input was focused).
+  if (to) {
+    const sources = [previous, sessionFrom]
+      .map((value) => value.trim())
+      .filter(Boolean);
+    for (const project of draft.cases) {
+      project.categories = project.categories.map((entry) =>
+        sources.some((source) => filterKey(entry) === filterKey(source)) ? to : entry,
+      );
+    }
+  }
+
+  draft.home.services = syncServicesToFilters(draft.home.services, filters);
+  return true;
+}
+
+export function removeWorkFilter(draft: AdminContent, index: number): boolean {
+  const current = draft.work.filters[index];
+  if (!current || current.all) return false;
+  const label = filterKey(current.label);
+  draft.work.filters.splice(index, 1);
+  if (label) {
+    for (const project of draft.cases) {
+      project.categories = project.categories.filter(
+        (entry) => filterKey(entry) !== label,
+      );
+    }
+  }
+  draft.home.services = syncServicesToFilters(draft.home.services, draft.work.filters);
+  return true;
+}
+
+export function moveWorkFilter(
+  draft: AdminContent,
+  index: number,
+  direction: -1 | 1,
+): boolean {
+  const list = draft.work.filters;
+  const next = index + direction;
+  if (next < 0 || next >= list.length) return false;
+  if (list[index]?.all || list[next]?.all) return false;
+  const [item] = list.splice(index, 1);
+  list.splice(next, 0, item);
+  draft.home.services = syncServicesToFilters(draft.home.services, list);
+  return true;
+}
+
+export function assignCaseCategory(
+  draft: AdminContent,
+  caseId: string,
+  rawName: string,
+): boolean {
+  const label = upsertWorkFilter(draft, rawName);
+  if (!label) return false;
+  const current = draft.cases.find((entry) => entry.id === caseId);
+  if (!current) return false;
+  if (!current.categories.some((entry) => filterKey(entry) === filterKey(label))) {
+    current.categories.push(label);
+  }
+  return true;
+}
+
+export function setCaseCategories(
+  draft: AdminContent,
+  caseId: string,
+  categories: string[],
+) {
+  const current = draft.cases.find((entry) => entry.id === caseId);
+  if (!current) return;
+  const allowed = new Map(
+    draft.work.filters
+      .filter((entry) => !entry.all && entry.label.trim())
+      .map((entry) => [filterKey(entry.label), entry.label.trim()] as const),
+  );
+  current.categories = categories
+    .map((entry) => entry.trim())
+    .filter(Boolean)
+    .map((entry) => allowed.get(filterKey(entry)) ?? entry)
+    .filter(
+      (entry, index, list) =>
+        list.findIndex((other) => filterKey(other) === filterKey(entry)) === index,
+    );
 }
 
 function normalizeHome(home: AdminContent["home"]): AdminContent["home"] {
@@ -717,22 +885,47 @@ function normalizeResume(resume: ResumeContent): ResumeContent {
 }
 
 function normalizeFilters(filters: unknown): WorkFilterItem[] {
-  const items = Array.isArray(filters)
+  const raw = Array.isArray(filters)
     ? filters.map((item) => {
-        if (typeof item === "string") return { label: item, hidden: false };
+        if (typeof item === "string") {
+          return { label: item.trim(), hidden: false, all: false };
+        }
         if (item && typeof item === "object") {
           const record = item as { label?: unknown; hidden?: unknown; all?: unknown };
           return {
-            label: typeof record.label === "string" ? record.label : "",
+            label: typeof record.label === "string" ? record.label.trim() : "",
             hidden: Boolean(record.hidden),
             all: Boolean(record.all),
           };
         }
-        return { label: "", hidden: false };
+        return { label: "", hidden: false, all: false };
       })
     : [];
+
+  const items: WorkFilterItem[] = [];
+  const seen = new Set<string>();
+  for (const item of raw) {
+    if (item.all) {
+      if (items.some((entry) => entry.all)) continue;
+      items.push({
+        label: item.label.trim() || "All",
+        hidden: item.hidden,
+        all: true,
+      });
+      continue;
+    }
+    const key = filterKey(item.label);
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    items.push({ label: item.label.trim(), hidden: item.hidden, all: false });
+  }
+
   if (!items.some((item) => item.all)) {
     items.unshift({ label: "All", hidden: false, all: true });
+  } else if (!items[0]?.all) {
+    const allIndex = items.findIndex((item) => item.all);
+    const [all] = items.splice(allIndex, 1);
+    items.unshift(all);
   }
   return items;
 }
@@ -749,7 +942,7 @@ function asImage(value: unknown): AdminImage | null {
   };
 }
 
-function normalizeCase(item: CaseItem): CaseItem {
+function normalizeCase(item: CaseItem, filters: WorkFilterItem[] = []): CaseItem {
   const raw = item as CaseItem & {
     category?: unknown;
     categories?: unknown;
@@ -765,13 +958,19 @@ function normalizeCase(item: CaseItem): CaseItem {
       : Array.isArray(raw.category)
         ? raw.category
         : [];
+  const canonical = new Map(
+    filters
+      .filter((entry) => !entry.all && entry.label.trim())
+      .map((entry) => [filterKey(entry.label), entry.label.trim()] as const),
+  );
   const categories = [...listed, ...previous]
     .filter((value): value is string => typeof value === "string")
     .map((value) => value.trim())
     .filter(Boolean)
+    .map((value) => canonical.get(filterKey(value)) ?? value)
     .filter(
       (value, index, list) =>
-        list.findIndex((other) => other.toLowerCase() === value.toLowerCase()) === index,
+        list.findIndex((other) => filterKey(other) === filterKey(value)) === index,
     );
 
   return {

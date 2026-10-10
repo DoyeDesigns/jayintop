@@ -16,7 +16,11 @@ import { useAdminContent } from "@/components/admin/content-provider";
 import {
   categoryFilterEntries,
   fillCornerFromProject,
+  createWorkFilter,
+  moveWorkFilter,
   projectCornerImage,
+  removeWorkFilter,
+  renameWorkFilterAt,
   syncServicesToFilters,
   type AdminImage,
   type CaseItem,
@@ -88,53 +92,21 @@ export function HomeEditor() {
   const categories = categoryFilterEntries(content.work.filters);
   const labelBeforeEdit = useRef("");
 
-  const commitCategoryLabel = (previous: string, next: string) => {
-    const from = previous.trim();
-    const to = next.trim();
-    if (!from || from.toLowerCase() === to.toLowerCase()) return;
-    mutate((draft) => {
-      for (const project of draft.cases) {
-        project.categories = project.categories.map((entry) =>
-          entry.toLowerCase() === from.toLowerCase() ? to : entry,
-        );
-      }
-      draft.home.services = syncServicesToFilters(draft.home.services, draft.work.filters);
-    });
-  };
-
   const moveCategory = (filterIndex: number, direction: -1 | 1) => {
     mutate((draft) => {
-      const entries = categoryFilterEntries(draft.work.filters);
-      const position = entries.findIndex((entry) => entry.index === filterIndex);
-      const swap = entries[position + direction];
-      if (!swap) return;
-      const filters = draft.work.filters;
-      const current = filters[filterIndex];
-      filters[filterIndex] = filters[swap.index];
-      filters[swap.index] = current;
-      draft.home.services = syncServicesToFilters(draft.home.services, filters);
+      moveWorkFilter(draft, filterIndex, direction);
     });
   };
 
   const removeCategory = (filterIndex: number) => {
     mutate((draft) => {
-      const label = draft.work.filters[filterIndex]?.label.trim().toLowerCase() ?? "";
-      draft.work.filters.splice(filterIndex, 1);
-      if (label) {
-        for (const project of draft.cases) {
-          project.categories = project.categories.filter(
-            (entry) => entry.toLowerCase() !== label,
-          );
-        }
-      }
-      draft.home.services = syncServicesToFilters(draft.home.services, draft.work.filters);
+      removeWorkFilter(draft, filterIndex);
     });
   };
 
   const addCategory = () => {
     mutate((draft) => {
-      draft.work.filters.push({ label: "New category", hidden: false });
-      draft.home.services = syncServicesToFilters(draft.home.services, draft.work.filters);
+      createWorkFilter(draft, "New category");
     });
   };
 
@@ -305,29 +277,21 @@ export function HomeEditor() {
               <TextField
                 label="Tab label"
                 required
-                help="Also a Work filter."
+                help="Also a Work filter / project category."
                 value={item.label}
                 onFocus={() => {
                   labelBeforeEdit.current = item.label;
                 }}
                 onChange={(value) => {
                   mutate((draft) => {
-                    const previous = draft.work.filters[filterIndex]?.label ?? "";
-                    draft.work.filters[filterIndex] = {
-                      ...draft.work.filters[filterIndex],
-                      label: value,
-                    };
-                    for (const service of draft.home.services) {
-                      if (
-                        service.title.trim().toLowerCase() ===
-                        previous.trim().toLowerCase()
-                      ) {
-                        service.title = value;
-                      }
-                    }
+                    renameWorkFilterAt(
+                      draft,
+                      filterIndex,
+                      value,
+                      labelBeforeEdit.current,
+                    );
                   });
                 }}
-                onBlur={() => commitCategoryLabel(labelBeforeEdit.current, item.label)}
               />
               <AreaField
                 label="Description"

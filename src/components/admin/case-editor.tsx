@@ -16,8 +16,9 @@ import {
 } from "@/components/admin/fields";
 import { useAdminContent } from "@/components/admin/content-provider";
 import {
+  assignCaseCategory,
   emptyBlock,
-  syncServicesToFilters,
+  setCaseCategories,
   type CaseStatus,
   type ContentBlock,
   type WorkFilterItem,
@@ -59,32 +60,21 @@ export function CaseEditor({ id }: { id: string }) {
   const path = `cases.${index}`;
 
   const addCategory = (name: string) => {
-    const all = content.work.filters.find((entry) => entry.all)?.label.trim().toLowerCase();
-    if (all && name.toLowerCase() === all) {
-      window.alert("All already shows every project. Use a specific category.");
-      return;
-    }
+    let ok = false;
     mutate((draft) => {
-      const filters = draft.work.filters;
-      const existing = filters.find((entry) => entry.label.trim().toLowerCase() === name.toLowerCase());
-      const label = existing?.label.trim() || name;
-      if (!existing) {
-        if (!filters.some((entry) => entry.all)) {
-          filters.unshift({ label: "All", hidden: false, all: true });
-        }
-        filters.push({ label: name, hidden: false });
-        draft.home.services = syncServicesToFilters(draft.home.services, filters);
-      }
-      const current = draft.cases.find((entry) => entry.id === id);
-      if (!current) return;
-      if (!current.categories.some((entry) => entry.toLowerCase() === label.toLowerCase())) {
-        current.categories.push(label);
-      }
+      ok = assignCaseCategory(draft, id, name);
     });
+    if (!ok) {
+      window.alert("Use a specific category name. “All” already shows every project.");
+    }
   };
 
   const set = <K extends keyof typeof item>(key: K, value: (typeof item)[K]) => {
     mutate((draft) => {
+      if (key === "categories") {
+        setCaseCategories(draft, id, value as string[]);
+        return;
+      }
       const current = draft.cases.find((entry) => entry.id === id);
       if (!current) return;
       current[key] = value;
