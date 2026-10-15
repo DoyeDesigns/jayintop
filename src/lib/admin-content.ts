@@ -54,6 +54,11 @@ export type ContentBlock = {
 
 export type CaseStatus = "published" | "hidden" | "draft";
 
+export type CaseCredit = {
+  role: string;
+  name: string;
+};
+
 export type MarqueeSource = "desktop" | "mobile" | "custom";
 
 export type WorkFilterItem = {
@@ -67,6 +72,7 @@ export type CaseItem = {
   title: string;
   client: string;
   role: string;
+  credits: CaseCredit[];
   categories: string[];
   year: string;
   status: CaseStatus;
@@ -580,9 +586,12 @@ export function fillCornerFromProject(
   const kind =
     imageKind && available.includes(imageKind) ? imageKind : available[0] || "";
 
+  const creditName =
+    project.credits.find((credit) => credit.name.trim())?.name.trim() ?? "";
+
   return {
     title: project.title,
-    brand: project.client.trim() || project.role.trim() || "",
+    brand: project.client.trim() || creditName || project.role.trim() || "",
     tag: project.categories.find((entry) => entry.trim()) || "",
     href: `/selected-work/${project.id}`,
     image: kind ? projectCornerImage(project, kind) : null,
@@ -942,10 +951,28 @@ function asImage(value: unknown): AdminImage | null {
   };
 }
 
+function normalizeCredits(raw: unknown, legacyRole: unknown): CaseCredit[] {
+  if (Array.isArray(raw)) {
+    return raw.flatMap((entry) => {
+      if (!entry || typeof entry !== "object") return [];
+      const row = entry as { role?: unknown; name?: unknown };
+      const role = asText(row.role).trim();
+      const name = asText(row.name).trim();
+      if (!role && !name) return [];
+      return [{ role, name }];
+    });
+  }
+
+  const legacy = asText(legacyRole).trim();
+  if (!legacy) return [];
+  return [{ role: legacy, name: "" }];
+}
+
 function normalizeCase(item: CaseItem, filters: WorkFilterItem[] = []): CaseItem {
   const raw = item as CaseItem & {
     category?: unknown;
     categories?: unknown;
+    credits?: unknown;
     coverMobile?: unknown;
     showOnHome?: unknown;
     marqueeSource?: unknown;
@@ -977,9 +1004,10 @@ function normalizeCase(item: CaseItem, filters: WorkFilterItem[] = []): CaseItem
     id: item.id,
     title: item.title,
     client: item.client,
-    role: item.role,
+    role: asText(item.role),
+    credits: normalizeCredits(raw.credits, item.role),
     categories,
-    year: item.year,
+    year: asText(item.year),
     status: item.status,
     cover: asImage(item.cover),
     coverMobile: asImage(raw.coverMobile),

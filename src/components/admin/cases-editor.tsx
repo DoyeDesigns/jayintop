@@ -29,6 +29,7 @@ function blankCase(): CaseItem {
     title: "Untitled project",
     client: "",
     role: "",
+    credits: [],
     categories: [],
     year: String(new Date().getFullYear()),
     status: "draft",

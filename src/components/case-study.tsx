@@ -101,14 +101,40 @@ export function CaseStudy({
                   <dt className="inline font-bold text-white">Project: </dt>
                   <dd className="inline font-normal">{project.category}</dd>
                 </div>
+                {project.year.trim() ? (
+                  <div>
+                    <dt className="inline font-bold text-white">Year: </dt>
+                    <dd className="inline font-normal">{project.year}</dd>
+                  </div>
+                ) : null}
                 <div>
                   <dt className="inline font-bold text-white">Client: </dt>
                   <dd className="inline font-normal">{project.client}</dd>
                 </div>
-                <div>
-                  <dt className="inline font-bold text-white">Creative Director: </dt>
-                  <dd className="inline font-normal">{project.director}</dd>
-                </div>
+                {project.credits.some((credit) => credit.role.trim() || credit.name.trim())
+                  ? project.credits.map((credit, creditIndex) => {
+                      const role = credit.role.trim();
+                      const name = credit.name.trim();
+                      if (!role && !name) return null;
+                      return (
+                        <div key={`${role}-${name}-${creditIndex}`}>
+                          {role ? (
+                            <dt className="inline font-bold text-white">
+                              {name ? `${role}: ` : role}
+                            </dt>
+                          ) : null}
+                          {name ? <dd className="inline font-normal">{name}</dd> : null}
+                        </div>
+                      );
+                    })
+                  : project.director.trim()
+                    ? (
+                      <div>
+                        <dt className="inline font-bold text-white">Creative Director: </dt>
+                        <dd className="inline font-normal">{project.director}</dd>
+                      </div>
+                    )
+                    : null}
               </dl>
             ) : null}
           </div>

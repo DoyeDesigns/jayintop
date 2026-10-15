@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
+  AddButton,
   AreaField,
   CategoryChecks,
   EditorPage,
@@ -19,6 +20,7 @@ import {
   assignCaseCategory,
   emptyBlock,
   setCaseCategories,
+  type CaseCredit,
   type CaseStatus,
   type ContentBlock,
   type WorkFilterItem,
@@ -58,6 +60,7 @@ export function CaseEditor({ id }: { id: string }) {
   }
 
   const path = `cases.${index}`;
+  const credits = Array.isArray(item.credits) ? item.credits : [];
 
   const addCategory = (name: string) => {
     let ok = false;
@@ -97,6 +100,33 @@ export function CaseEditor({ id }: { id: string }) {
       if (next < 0 || next >= current.blocks.length) return;
       const [block] = current.blocks.splice(blockIndex, 1);
       current.blocks.splice(next, 0, block);
+    });
+  };
+
+  const setCredit = (creditIndex: number, credit: CaseCredit) => {
+    mutate((draft) => {
+      const current = draft.cases.find((entry) => entry.id === id);
+      if (!current) return;
+      current.credits[creditIndex] = credit;
+    });
+  };
+
+  const moveCredit = (creditIndex: number, direction: -1 | 1) => {
+    mutate((draft) => {
+      const current = draft.cases.find((entry) => entry.id === id);
+      if (!current) return;
+      const next = creditIndex + direction;
+      if (next < 0 || next >= current.credits.length) return;
+      const [credit] = current.credits.splice(creditIndex, 1);
+      current.credits.splice(next, 0, credit);
+    });
+  };
+
+  const removeCredit = (creditIndex: number) => {
+    mutate((draft) => {
+      const current = draft.cases.find((entry) => entry.id === id);
+      if (!current) return;
+      current.credits.splice(creditIndex, 1);
     });
   };
 
@@ -147,20 +177,12 @@ export function CaseEditor({ id }: { id: string }) {
             onChange={(value) => set("client", value)}
           />
         </div>
-        <div className="grid gap-6 md:grid-cols-2">
-          <TextField
-            label="Year"
-            required
-            value={item.year}
-            onChange={(value) => set("year", value)}
-          />
-          <TextField
-            label="Your role"
-            required
-            value={item.role}
-            onChange={(value) => set("role", value)}
-          />
-        </div>
+        <TextField
+          label="Year"
+          required
+          value={item.year}
+          onChange={(value) => set("year", value)}
+        />
         <CategoryChecks
           options={categoryChoices(content.work.filters, item.categories)}
           selected={item.categories}
@@ -227,6 +249,57 @@ export function CaseEditor({ id }: { id: string }) {
             { value: "draft", label: "Draft" },
           ]}
         />
+      </Subsection>
+
+      <Subsection
+        title="Roles"
+        hint="Add a role and the person in it. These appear on the project page with the year."
+      >
+        {credits.length === 0 ? (
+          <p className="font-inter text-[14px] leading-[20px] text-[#94979C]">
+            No roles yet.
+          </p>
+        ) : null}
+        {credits.map((credit, creditIndex) => (
+          <div
+            key={`${path}-credit-${creditIndex}`}
+            className="flex flex-col gap-4 border-b border-[#22262F] pb-6"
+          >
+            <ItemTools
+              title={credit.role.trim() || credit.name.trim() || "Role"}
+              index={creditIndex}
+              total={credits.length}
+              onMove={(direction) => moveCredit(creditIndex, direction)}
+              onRemove={() => removeCredit(creditIndex)}
+            />
+            <div className="grid gap-6 md:grid-cols-2">
+              <TextField
+                label="Role"
+                required
+                value={credit.role}
+                onChange={(role) => setCredit(creditIndex, { ...credit, role })}
+              />
+              <TextField
+                label="Name"
+                required
+                value={credit.name}
+                onChange={(name) => setCredit(creditIndex, { ...credit, name })}
+              />
+            </div>
+          </div>
+        ))}
+        <AddButton
+          onClick={() =>
+            mutate((draft) => {
+              const current = draft.cases.find((entry) => entry.id === id);
+      if (!current) return;
+      if (!Array.isArray(current.credits)) current.credits = [];
+      current.credits.push({ role: "", name: "" });
+            })
+          }
+        >
+          Add role
+        </AddButton>
       </Subsection>
 
       <Subsection title="Page content" hint="Blocks stack down the page in this order.">

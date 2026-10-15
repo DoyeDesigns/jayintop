@@ -98,7 +98,10 @@ export function publishedWork(content: AdminContent): WorkItem[] {
       category: item.categories.join(", "),
       categories: item.categories,
       client: item.client,
-      director: item.role,
+      year: item.year,
+      director:
+        item.credits.find((credit) => credit.name.trim())?.name.trim() || item.role,
+      credits: item.credits,
       filters: filtersFor(item.categories),
       image: imageSrc(item.cover),
       imageMobile: imageSrc(item.coverMobile) || imageSrc(item.cover),

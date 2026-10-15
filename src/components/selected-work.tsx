@@ -174,7 +174,7 @@ export function SelectedWork({
           <li key={item.id}>
             <article>
               <Link href={`/selected-work/${item.id}`} className="block">
-              <div className="relative aspect-square w-full max-h-[370px] overflow-hidden rounded-lg bg-[#1A1A1A] md:aspect-[1380/640] md:max-w-none">
+              <div className="relative aspect-square w-full overflow-hidden rounded-lg bg-[#1A1A1A] md:aspect-[1380/640] md:max-w-none">
                 <ContentImage
                   src={item.imageMobile || item.image}
                   alt=""
@@ -195,9 +195,6 @@ export function SelectedWork({
                 <h2 className="font-tanker md:text-[40px] text-[20px] leading-[1.2] font-normal tracking-normal text-brand-white uppercase">
                   {item.title}
                 </h2>
-                {/* <p className="font-bespoke md:text-[24px] text-[16px] leading-[1.5] font-normal tracking-normal text-brand-white">
-                  {item.category}
-                </p> */}
               </div>
               </Link>
             </article>
