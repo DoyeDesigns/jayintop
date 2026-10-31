@@ -43,7 +43,7 @@ export function DashboardEditor() {
       : "",
     content.site.email
       ? ""
-      : "No contact email saved in Settings, so the contact button has nowhere to send people.",
+      : "No contact email saved in Settings, so form alerts have nowhere to go unless ADMIN_EMAIL is set.",
     emptySocials
       ? "Some social links are empty and will render as dead icons in the footer."
       : "",

@@ -35,7 +35,7 @@ export function SettingsEditor() {
         <TextField
           label="Contact email"
           required
-          help="Where the contact button sends people."
+          help="Where form alerts go if ADMIN_EMAIL is not set in the environment."
           value={site.email}
           onChange={(value) => setPath("site.email", value)}
         />

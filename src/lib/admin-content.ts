@@ -139,6 +139,7 @@ export type AdminContent = {
       poster: AdminImage | null;
       src: string;
       label: string;
+      hidden: boolean;
     };
   };
   about: {
@@ -384,6 +385,7 @@ export function defaultContent(): AdminContent {
         poster: { src: "/magic.png", name: "magic.png", w: 1600, h: 900 },
         src: "",
         label: "Play",
+        hidden: false,
       },
     },
     about: {
@@ -823,6 +825,7 @@ function normalizeHome(home: AdminContent["home"]): AdminContent["home"] {
       label: typeof home?.video?.label === "string" && home.video.label.trim()
         ? home.video.label
         : "Play",
+      hidden: Boolean(home?.video?.hidden),
     },
   };
 }

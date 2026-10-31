@@ -142,11 +142,13 @@ export default async function Home() {
       <HomeUseCases
         categories={categoryItems(content.work.filters, home.services, works)}
       />
-      <HomeVideo
-        posterSrc={home.video?.poster?.src || "/magic.png"}
-        videoSrc={home.video?.src || ""}
-        label={home.video?.label || "Play"}
-      />
+      {home.video?.hidden ? null : (
+        <HomeVideo
+          posterSrc={home.video?.poster?.src || "/magic.png"}
+          videoSrc={home.video?.src || ""}
+          label={home.video?.label || "Play"}
+        />
+      )}
       <HomeTestimonials items={quotes} />
     </main>
   );

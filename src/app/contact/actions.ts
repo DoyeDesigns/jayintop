@@ -1,6 +1,7 @@
 "use server";
 
-import { saveContactMessage } from "@/lib/site-store";
+import { sendContactEmails } from "@/lib/contact-mail";
+import { readSiteContent, saveContactMessage } from "@/lib/site-store";
 
 export async function submitContact(formData: FormData) {
   const firstName = String(formData.get("firstName") ?? "").trim();
@@ -17,16 +18,26 @@ export async function submitContact(formData: FormData) {
     return { ok: false as const, error: "Enter a valid email address." };
   }
 
+  const payload = {
+    firstName,
+    lastName,
+    email,
+    phone,
+    message,
+    createdAt: new Date().toISOString(),
+  };
+
   try {
-    await saveContactMessage({
-      firstName,
-      lastName,
-      email,
-      phone,
-      message,
-      createdAt: new Date().toISOString(),
-    });
+    await saveContactMessage(payload);
   } catch {
+    return { ok: false as const, error: "The message did not send. Try again." };
+  }
+
+  try {
+    const { site } = await readSiteContent();
+    await sendContactEmails(payload, site.email);
+  } catch (error) {
+    console.error("[submitContact] email failed:", error);
     return { ok: false as const, error: "The message did not send. Try again." };
   }
 

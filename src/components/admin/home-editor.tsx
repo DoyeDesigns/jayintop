@@ -65,13 +65,14 @@ function ensureCorners(corners: HomeCorner[] | undefined): HomeCorner[] {
 }
 
 function patchVideo(
-  current: { poster: AdminImage | null; src: string; label: string } | undefined,
-  patch: Partial<{ poster: AdminImage | null; src: string; label: string }>,
+  current: { poster: AdminImage | null; src: string; label: string; hidden: boolean } | undefined,
+  patch: Partial<{ poster: AdminImage | null; src: string; label: string; hidden: boolean }>,
 ) {
   return {
     poster: patch.poster !== undefined ? patch.poster : (current?.poster ?? null),
     src: patch.src !== undefined ? patch.src : (current?.src ?? ""),
     label: patch.label !== undefined ? patch.label : (current?.label ?? "Play"),
+    hidden: patch.hidden !== undefined ? patch.hidden : Boolean(current?.hidden),
   };
 }
 
@@ -402,8 +403,17 @@ export function HomeEditor() {
 
       <Subsection
         title="Video"
-        hint="Shows under What I do. Paste a YouTube, Vimeo, or Google Drive link, or upload a file."
+        hint="Shows under What I do. Hide it to take the whole block off the home page without deleting the file or link."
       >
+        <button
+          type="button"
+          onClick={() =>
+            setPath("home.video", patchVideo(home.video, { hidden: !home.video?.hidden }))
+          }
+          className="inline-flex h-8 w-fit cursor-pointer items-center justify-center rounded-[6px] border border-[#373A41] px-3 font-tanker text-[15px] leading-[1.2] font-normal tracking-normal text-brand-white hover:border-brand hover:text-brand"
+        >
+          {home.video?.hidden ? "Show on home" : "Hide from home"}
+        </button>
         <ImageField
           label="Cover image"
           help="Still shown before play. 9 MB maximum."
