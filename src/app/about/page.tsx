@@ -20,6 +20,11 @@ const sectionTitle =
 const body =
   "text-left font-bespoke text-[16px] leading-[1.5] font-normal tracking-normal";
 
+const splitRow =
+  "flex flex-col items-center gap-10 md:grid md:grid-cols-[minmax(0,42%)_minmax(0,1fr)] md:items-start md:gap-16";
+
+const mediaCol = "mx-auto w-full max-w-[520px] md:mx-0 md:max-w-none";
+
 export default async function AboutPage() {
   const { about, testimonials } = await readSiteContent();
   const lead = about.sections.slice(0, 2);
@@ -40,19 +45,19 @@ export default async function AboutPage() {
         <RichText text={about.sub} />
       </p>
 
-      <div className="mt-14 flex flex-col items-center gap-10 md:mt-20 md:flex-row md:items-center md:gap-16">
-        <div className="relative mx-auto aspect-square w-full max-w-[420px] shrink-0 overflow-hidden rounded-full md:mx-0">
+      <div className={`mt-14 md:mt-20 ${splitRow}`}>
+        <div className={`relative aspect-square overflow-hidden rounded-full ${mediaCol}`}>
           <ContentImage
             src={portrait?.src ?? "/about-yinka.png"}
             alt="Yinka T. Jayeola"
             fill
             priority
-            sizes="(min-width: 768px) 420px, 100vw"
+            sizes="(min-width: 768px) 42vw, 100vw"
             className="object-cover"
           />
         </div>
 
-        <div className="flex w-full flex-col gap-10 text-left">
+        <div className="flex w-full min-w-0 flex-col gap-10 text-left">
           {lead.map((section) => (
             <section key={section.title}>
               <h2 className={`${sectionTitle} text-brand-white`}>{section.title}</h2>
@@ -66,17 +71,17 @@ export default async function AboutPage() {
       </div>
       </div>
 
-      <section className="relative left-1/2 mt-16 w-screen -translate-x-1/2 bg-[#F5F1E8] py-16 text-[#1A1A1A] md:mt-24 md:py-24">
-        <div className="mx-auto flex w-full max-w-[1380px] flex-col items-center gap-10 px-4 md:flex-row md:items-center md:gap-16 md:px-[30px]">
+      <section className="relative left-1/2 mt-16 -ml-[50vw] w-screen bg-[#F5F1E8] py-16 text-[#1A1A1A] md:mt-24 md:py-24">
+        <div className={`mx-auto w-full max-w-[1380px] px-4 md:px-[30px] ${splitRow}`}>
           <ContentImage
             src={sideImage?.src ?? "/about-img-2.png"}
             alt=""
             width={651}
             height={858}
-            className="mx-auto h-auto w-full max-w-[520px] md:mx-0 md:w-[42%] md:max-w-none md:shrink-0"
+            className={`h-auto ${mediaCol}`}
           />
 
-          <div className="flex w-full flex-col gap-10 text-left">
+          <div className="flex w-full min-w-0 flex-col gap-10 text-left">
             {rest.map((section) => (
               <section key={section.title}>
                 <h2 className={sectionTitle}>{section.title}</h2>
