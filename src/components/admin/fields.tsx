@@ -1,7 +1,7 @@
 "use client";
 
 import { Check, ChevronDown, ChevronUp, X } from "lucide-react";
-import { useId, useState, type ReactNode } from "react";
+import { useId, useState, type ClipboardEvent, type ReactNode } from "react";
 import type { AdminImage } from "@/lib/admin-content";
 import { uploadMediaFile } from "@/lib/upload-media";
 import { isVideoLink } from "@/lib/video";
@@ -184,6 +184,60 @@ export function TextField({
   );
 }
 
+function decodeHtmlEntities(value: string) {
+  return value
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'");
+}
+
+function htmlClipboardToMarkup(html: string) {
+  const converted = html
+    .replace(/<style[\s\S]*?<\/style>/gi, "")
+    .replace(/<script[\s\S]*?<\/script>/gi, "")
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<\/(p|h[1-6]|li|tr|div|blockquote)>/gi, "\n")
+    .replace(/<li[^>]*>/gi, "• ")
+    .replace(/<(strong|b)[^>]*>([\s\S]*?)<\/\1>/gi, "**$2**")
+    .replace(/<(em|i)[^>]*>([\s\S]*?)<\/\1>/gi, "_$2_")
+    .replace(/<[^>]+>/g, "")
+    .replace(/\u00a0/g, " ");
+  return decodeHtmlEntities(converted)
+    .replace(/[ \t]+\n/g, "\n")
+    .replace(/\n[ \t]+/g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
+function insertAtCursor(
+  field: HTMLTextAreaElement | HTMLInputElement,
+  value: string,
+  inserted: string,
+  onChange: (value: string) => void,
+) {
+  const start = field.selectionStart ?? value.length;
+  const end = field.selectionEnd ?? value.length;
+  const next = `${value.slice(0, start)}${inserted}${value.slice(end)}`;
+  onChange(next);
+  const cursor = start + inserted.length;
+  requestAnimationFrame(() => {
+    field.focus();
+    field.setSelectionRange(cursor, cursor);
+  });
+}
+
+function clipboardMarkup(event: ClipboardEvent<HTMLTextAreaElement | HTMLInputElement>) {
+  const html = event.clipboardData.getData("text/html");
+  const plain = event.clipboardData.getData("text/plain");
+  if (html && /<(p|div|br|li|h[1-6])\b/i.test(html)) {
+    return htmlClipboardToMarkup(html);
+  }
+  return plain.replace(/\r\n/g, "\n").replace(/\u2028|\u2029/g, "\n");
+}
+
 export function AreaField({
   label,
   value,
@@ -215,7 +269,13 @@ export function AreaField({
         required={required}
         aria-describedby={help ? helpId : undefined}
         onChange={(event) => onChange(event.target.value)}
-        className={`${inputClass} min-h-24 resize-y`}
+        onPaste={(event) => {
+          const html = event.clipboardData.getData("text/html");
+          if (!html || !/<(p|div|br|li|h[1-6])\b/i.test(html)) return;
+          event.preventDefault();
+          insertAtCursor(event.currentTarget, value, clipboardMarkup(event), onChange);
+        }}
+        className={`${inputClass} min-h-24 resize-y whitespace-pre-wrap`}
       />
       {help ? (
         <p id={helpId} className="font-inter text-[14px] leading-[20px] font-normal text-[#94979C]">
@@ -231,18 +291,22 @@ export function SelectField({
   value,
   onChange,
   options,
+  groups,
   required,
   help,
 }: {
   label: string;
   value: string;
   onChange: (value: string) => void;
-  options: { value: string; label: string }[];
+  options?: { value: string; label: string }[];
+  groups?: { label: string; options: { value: string; label: string }[] }[];
   required?: boolean;
   help?: string;
 }) {
   const id = useId();
   const helpId = `${id}-help`;
+  const listed = options ?? [];
+  const grouped = (groups ?? []).filter((group) => group.options.length > 0);
 
   return (
     <div className="flex flex-col gap-2">
@@ -260,10 +324,19 @@ export function SelectField({
         onChange={(event) => onChange(event.target.value)}
         className={`${inputClass} h-10`}
       >
-        {options.map((option) => (
-          <option key={option.value} value={option.value} className="bg-[#131313]">
+        {listed.map((option) => (
+          <option key={option.value || "empty"} value={option.value} className="bg-[#131313]">
             {option.label}
           </option>
+        ))}
+        {grouped.map((group) => (
+          <optgroup key={group.label} label={group.label} className="bg-[#131313]">
+            {group.options.map((option) => (
+              <option key={option.value} value={option.value} className="bg-[#131313]">
+                {option.label}
+              </option>
+            ))}
+          </optgroup>
         ))}
       </select>
     </div>

@@ -4,7 +4,7 @@ import { ChevronDown } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { ContentImage } from "@/components/content-image";
-import { matchesWorkFilter } from "@/lib/public-work";
+import { matchesWorkFilter, workPath } from "@/lib/public-work";
 import type { WorkItem } from "@/lib/work";
 
 const tabClass =
@@ -13,12 +13,17 @@ const tabClass =
 export function SelectedWork({
   items,
   filters = [],
+  initialFilter = "",
 }: {
   items: WorkItem[];
   filters?: { label: string; all?: boolean }[];
+  initialFilter?: string;
 }) {
   const options = filters.length ? filters : [{ label: "All", all: true }];
-  const [filter, setFilter] = useState(options[0].label);
+  const start =
+    options.find((item) => item.label.toLowerCase() === initialFilter.trim().toLowerCase())
+      ?.label ?? options[0].label;
+  const [filter, setFilter] = useState(start);
   const [stuck, setStuck] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const sentinelRef = useRef<HTMLDivElement>(null);
@@ -166,22 +171,32 @@ export function SelectedWork({
         ref={listRef}
         className={
           logoGrid
-            ? "mt-8 grid grid-cols-2 gap-4 md:gap-6"
+            ? "mt-8 grid grid-cols-3 gap-3 md:gap-6"
             : "mt-8 flex flex-col gap-12"
         }
       >
         {visible.map((item) => (
           <li key={item.id}>
             <article>
-              <Link href={`/selected-work/${item.id}`} className="block">
-              <div className="relative aspect-square w-full overflow-hidden rounded-lg bg-[#1A1A1A] md:aspect-[1380/640] md:max-w-none">
+              <Link
+                href={active.all ? workPath(item) : workPath(item, active.label)}
+                className="block"
+              >
+              <div
+                className={`relative w-full overflow-hidden rounded-lg bg-[#1A1A1A] ${
+                  logoGrid
+                    ? "aspect-square"
+                    : "aspect-square md:aspect-[1380/640] lg:aspect-[1380/680] md:max-w-none"
+                }`}
+              >
                 <ContentImage
                   src={item.imageMobile || item.image}
-                  alt=""
+                  alt={logoGrid ? item.title : ""}
                   fill
-                  sizes="370px"
-                  className="object-cover md:hidden"
+                  sizes={logoGrid ? "(min-width: 768px) 33vw, 33vw" : "370px"}
+                  className={`object-cover ${logoGrid ? "" : "md:hidden"}`}
                 />
+                {logoGrid ? null : (
                 <ContentImage
                   src={item.image}
                   alt=""
@@ -190,12 +205,15 @@ export function SelectedWork({
                   sizes="1200px"
                   className="hidden object-cover md:block"
                 />
+                )}
               </div>
+              {logoGrid ? null : (
               <div className="mt-4 flex flex-col items-start gap-1 text-left md:flex-row md:items-end md:justify-between">
                 <h2 className="font-tanker md:text-[40px] text-[20px] leading-[1.2] font-normal tracking-normal text-brand-white uppercase">
                   {item.title}
                 </h2>
               </div>
+              )}
               </Link>
             </article>
           </li>

@@ -17,12 +17,16 @@ export default async function ContactPage() {
 
   return (
     <main className="py-16 md:py-24">
+      {contact.headline.trim() ? (
       <h1 className="text-center font-tanker md:text-[76px] text-[40px] leading-none font-normal tracking-normal text-brand-white uppercase">
         {contact.headline}
       </h1>
+      ) : null}
+      {contact.body.trim() ? (
       <p className="mx-auto mt-3 max-w-[640px] text-center font-bespoke text-[20px] leading-[1.5] font-normal tracking-normal text-[#C7C3BB]">
         {contact.body}
       </p>
+      ) : null}
       <div className="mt-12">
         <ContactForm label={contact.cta} />
       </div>

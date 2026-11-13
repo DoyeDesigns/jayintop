@@ -1,7 +1,9 @@
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { ContentImage } from "@/components/content-image";
+import { RichParagraphs } from "@/lib/rich-text";
 import { videoView } from "@/lib/video";
+import { workPath, type WorkNavLink } from "@/lib/public-work";
 import type { WorkImage, WorkItem } from "@/lib/work";
 
 const heading =
@@ -52,19 +54,28 @@ function Frame({ image, alt }: { image: WorkImage; alt: string }) {
   );
 }
 
+function navHref(link: WorkNavLink) {
+  if (link.kind === "category") return link.href;
+  return workPath(link.item, link.category);
+}
+
+function navLabel(link: WorkNavLink) {
+  return link.kind === "category" ? `Go to ${link.label}` : link.item.title;
+}
+
 export function CaseStudy({
   project,
   previous,
   next,
 }: {
   project: WorkItem;
-  previous: WorkItem;
-  next: WorkItem;
+  previous: WorkNavLink;
+  next: WorkNavLink;
 }) {
   return (
     <article className="flex flex-col gap-10">
-      {project.image || project.imageMobile ? (
-        <div className="relative aspect-square overflow-hidden rounded-lg md:aspect-[1380/640]">
+      {/* {project.image || project.imageMobile ? (
+        <div className="relative hidden aspect-square overflow-hidden rounded-lg md:aspect-[1380/640]">
           <ContentImage
             src={project.imageMobile || project.image}
             alt=""
@@ -82,35 +93,55 @@ export function CaseStudy({
             className="hidden object-cover md:block"
           />
         </div>
-      ) : null}
+      ) : null} */}
 
       {project.sections.map((section, index) => (
         <section key={section.title} className="flex flex-col gap-6">
-          <div className="flex flex-col items-start gap-4 text-left md:flex-row md:justify-between md:gap-10">
-            <div className="max-w-[720px]">
-              {index === 0 ? (
-                <h1 className={heading}>{section.title}</h1>
-              ) : (
-                <h2 className={heading}>{section.title}</h2>
-              )}
-              <p className={`${copy} mt-3`}>{section.body}</p>
-            </div>
-            {index === 0 ? (
-              <dl className={`${copy} md:shrink-0 md:text-right`}>
+          {index === 0 ? (
+            <>
+              <div className="flex flex-col gap-4 text-left md:flex-row md:items-end md:justify-between md:gap-10">
+                <h1 className={`${heading} max-w-[720px]`}>{section.title}</h1>
+                {project.liveUrl?.trim() && !project.liveHidden ? (
+                  <a
+                    href={
+                      /^https?:\/\//i.test(project.liveUrl.trim())
+                        ? project.liveUrl.trim()
+                        : `https://${project.liveUrl.trim()}`
+                    }
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="shrink-0 font-tanker text-[16px] leading-[1.2] font-normal tracking-normal text-brand uppercase underline decoration-brand underline-offset-4 transition-colors duration-200 hover:text-brand-white md:text-[20px]"
+                  >
+                    Live site
+                  </a>
+                ) : null}
+              </div>
+              <div className="flex flex-col items-start gap-4 text-left md:flex-row md:items-start md:justify-between md:gap-10">
+                {section.body.trim() ? (
+                  <RichParagraphs
+                    text={section.body}
+                    className={`${copy} max-w-[720px] flex flex-col gap-4`}
+                  />
+                ) : null}
+                <dl className={`${copy} md:shrink-0 md:text-right`}>
+                {project.category.trim() ? (
                 <div>
                   <dt className="inline font-bold text-white">Project: </dt>
                   <dd className="inline font-normal">{project.category}</dd>
                 </div>
+                ) : null}
                 {project.year.trim() ? (
                   <div>
                     <dt className="inline font-bold text-white">Year: </dt>
                     <dd className="inline font-normal">{project.year}</dd>
                   </div>
                 ) : null}
+                {project.client.trim() ? (
                 <div>
                   <dt className="inline font-bold text-white">Client: </dt>
                   <dd className="inline font-normal">{project.client}</dd>
                 </div>
+                ) : null}
                 {project.credits.some((credit) => credit.role.trim() || credit.name.trim())
                   ? project.credits.map((credit, creditIndex) => {
                       const role = credit.role.trim();
@@ -136,8 +167,19 @@ export function CaseStudy({
                     )
                     : null}
               </dl>
-            ) : null}
-          </div>
+              </div>
+            </>
+          ) : (
+            <div className="max-w-[720px] text-left">
+              {section.title.trim() ? <h2 className={heading}>{section.title}</h2> : null}
+              {section.body.trim() ? (
+                <RichParagraphs
+                  text={section.body}
+                  className={`${copy} mt-3 flex flex-col gap-4`}
+                />
+              ) : null}
+            </div>
+          )}
 
           {section.video ? (
             <VideoPlayer url={section.video} poster={section.poster} />
@@ -161,17 +203,17 @@ export function CaseStudy({
           className="pointer-events-none absolute -top-5 bottom-0 left-1/2 z-0 w-1 -translate-x-1/2 bg-brand md:hidden"
         />
         <Link
-          href={`/selected-work/${previous.id}`}
+          href={navHref(previous)}
           className="relative z-10 inline-flex h-[52px] min-h-[40px] items-center justify-center gap-[10px] rounded-tl-[1000px] rounded-tr-[12px] rounded-br-[12px] rounded-bl-[1000px] bg-brand px-6 py-3 font-tanker text-[16px] leading-[1.2] font-normal tracking-normal text-brand-white uppercase transition-colors duration-200 hover:bg-brand/70"
         >
           <ArrowLeft size={16} strokeWidth={1.75} />
-          {previous.title}
+          {navLabel(previous)}
         </Link>
         <Link
-          href={`/selected-work/${next.id}`}
+          href={navHref(next)}
           className="relative z-10 inline-flex h-[52px] min-h-[40px] items-center justify-center gap-[10px] rounded-tl-[12px] rounded-tr-[1000px] rounded-br-[1000px] rounded-bl-[12px] bg-brand px-6 py-3 font-tanker text-[16px] leading-[1.2] font-normal tracking-normal text-brand-white uppercase transition-colors duration-200 hover:bg-brand/70"
         >
-          {next.title}
+          {navLabel(next)}
           <ArrowRight size={16} strokeWidth={1.75} />
         </Link>
       </nav>

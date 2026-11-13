@@ -183,6 +183,19 @@ export function CaseEditor({ id }: { id: string }) {
           value={item.year}
           onChange={(value) => set("year", value)}
         />
+        <TextField
+          label="Live site"
+          help="Public project URL. Opens in a new tab. Hide it if the site is not ready."
+          value={item.liveUrl ?? ""}
+          onChange={(value) => set("liveUrl", value)}
+        />
+        <button
+          type="button"
+          onClick={() => set("liveHidden", !item.liveHidden)}
+          className="inline-flex h-8 w-fit cursor-pointer items-center justify-center rounded-[6px] border border-[#373A41] px-3 font-tanker text-[15px] leading-[1.2] font-normal tracking-normal text-brand-white hover:border-brand hover:text-brand"
+        >
+          {item.liveHidden ? "Show live site" : "Hide live site"}
+        </button>
         <CategoryChecks
           options={categoryChoices(content.work.filters, item.categories)}
           selected={item.categories}
@@ -328,6 +341,9 @@ export function CaseEditor({ id }: { id: string }) {
                 <AreaField
                   label="Body"
                   required
+                  rows={8}
+                  format
+                  help="Line breaks and blank lines are kept on the live page. Bold, italic, and color work here too."
                   value={block.body}
                   onChange={(body) => setBlock(blockIndex, { ...block, body })}
                 />
@@ -399,7 +415,8 @@ export function CaseEditor({ id }: { id: string }) {
                 <AreaField
                   label="Quote"
                   required
-                  rows={3}
+                  rows={4}
+                  format
                   value={block.body}
                   onChange={(body) => setBlock(blockIndex, { ...block, body })}
                 />

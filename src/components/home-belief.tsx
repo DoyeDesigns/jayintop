@@ -1,5 +1,5 @@
-import Image from "next/image";
 import Link from "next/link";
+import { ContentImage } from "@/components/content-image";
 import { MarqueeRow } from "@/components/marquee-row";
 
 const marquee = "// ABOUT ".repeat(10);
@@ -11,10 +11,12 @@ export function HomeBelief({
   eyebrow,
   lead,
   paragraphs,
+  imageSrc,
 }: {
   eyebrow: string;
   lead: string;
   paragraphs: string[];
+  imageSrc?: string;
 }) {
   return (
     <section>
@@ -30,12 +32,16 @@ export function HomeBelief({
       <div className="relative left-1/2 w-screen -translate-x-1/2 bg-brand-white text-[#1A1A1A]">
         <div className="mx-auto flex w-full max-w-[1380px] flex-col-reverse items-center gap-12 px-4 py-16 md:flex-row md:items-center md:justify-center md:gap-16 md:px-[30px] md:py-24">
           <div className="flex w-full flex-col items-start md:w-auto md:max-w-[640px]">
+            {eyebrow.trim() ? (
             <h2 className="font-tanker text-[40px] leading-[1.2] font-normal tracking-normal uppercase md:text-[60px]">
               {eyebrow}
             </h2>
+            ) : null}
+            {lead.trim() ? (
             <p className="mt-4 font-bespoke text-[24px] leading-[1.5] font-normal tracking-normal md:text-[30px]">
               {lead}
             </p>
+            ) : null}
             <div className="mt-6 flex flex-col gap-4 font-bespoke text-[16px] leading-[1.5] font-normal tracking-normal">
               {paragraphs.map((paragraph) => (
                 <p key={paragraph}>{paragraph}</p>
@@ -46,20 +52,13 @@ export function HomeBelief({
             </Link>
           </div>
 
-          <div className="w-full max-w-[520px] shrink-0 md:w-[520px]">
-            <Image
-              src="/about-img-mobile.png"
-              alt="Yinka sketching logo ideas at a desk"
-              width={372}
-              height={372}
-              className="h-auto w-full md:hidden"
-            />
-            <Image
-              src="/about-img.png"
-              alt="Yinka sketching logo ideas at a desk"
-              width={582}
-              height={582}
-              className="hidden h-auto w-full md:block"
+          <div className="relative aspect-square w-full max-w-[520px] shrink-0 overflow-hidden md:w-[520px]">
+            <ContentImage
+              src={imageSrc ?? ""}
+              alt=""
+              fill
+              sizes="520px"
+              className="object-cover"
             />
           </div>
         </div>

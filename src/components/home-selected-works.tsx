@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ContentImage } from "@/components/content-image";
 import { useMarqueeRepeat } from "@/components/marquee-row";
 import { useEffect, useRef, useState, type RefObject } from "react";
+import { workPath } from "@/lib/public-work";
 import type { WorkItem } from "@/lib/work";
 
 const SPEED = 48;
@@ -25,22 +26,18 @@ function ProjectCard({
   return (
     <li className="shrink-0">
       <Link
-        href={`/selected-work/${item.id}`}
+        href={workPath(item)}
         tabIndex={hidden ? -1 : undefined}
         draggable={false}
         className="group relative block h-[240px] w-[178px] overflow-hidden md:h-[668px] md:w-[494px]"
       >
-        {item.image ? (
-          <ContentImage
-            src={item.image}
-            alt=""
-            fill
-            sizes="494px"
-            className="pointer-events-none object-cover"
-          />
-        ) : (
-          <span className="absolute inset-0 bg-[#1A1A1A]" />
-        )}
+        <ContentImage
+          src={item.image}
+          alt=""
+          fill
+          sizes="494px"
+          className="pointer-events-none object-cover"
+        />
         <span className="absolute inset-0 z-10 flex items-center justify-center bg-black/0 transition-colors duration-300 group-hover:bg-black/40 group-focus-visible:bg-black/40">
           <span
             className={`px-3 text-center font-inter text-[18px] leading-none font-medium text-[#DEDAD2] transition-opacity duration-300 group-hover:opacity-100 group-focus-visible:opacity-100 md:px-6 md:text-[35px] ${item.image ? "opacity-0" : "opacity-100"}`}

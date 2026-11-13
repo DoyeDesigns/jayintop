@@ -20,11 +20,14 @@ export type WorkCredit = {
 
 export type WorkItem = {
   id: string;
+  slug: string;
   title: string;
   category: string;
   categories: string[];
   client: string;
   year: string;
+  liveUrl: string;
+  liveHidden: boolean;
   director: string;
   credits: WorkCredit[];
   filters: Exclude<WorkFilter, "all">[];

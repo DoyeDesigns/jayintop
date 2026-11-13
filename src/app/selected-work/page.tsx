@@ -14,12 +14,18 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default async function SelectedWorkPage() {
+export default async function SelectedWorkPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ cat?: string | string[] }>;
+}) {
   const content = await readSiteContent();
+  const raw = (await searchParams).cat;
+  const initialFilter = typeof raw === "string" ? raw : Array.isArray(raw) ? raw[0] : "";
 
   return (
     <main className="pb-16 md:pb-24">
-      <div className="pt-16 md:pt-24">
+      <div className="pt-16 md:pt-24 hidden">
         <h1 className="text-left font-tanker text-[40px] leading-[1.2] font-normal tracking-normal text-brand-white uppercase md:text-center md:text-[80px]">
           {content.work.title}
         </h1>
@@ -27,7 +33,12 @@ export default async function SelectedWorkPage() {
           {content.work.subtitle}
         </p>
       </div>
-      <SelectedWork items={publishedWork(content)} filters={visibleFilterLabels(content.work.filters)} />
+      <SelectedWork
+        key={initialFilter || "all"}
+        items={publishedWork(content)}
+        filters={visibleFilterLabels(content.work.filters)}
+        initialFilter={initialFilter}
+      />
     </main>
   );
 }

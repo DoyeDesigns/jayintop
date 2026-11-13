@@ -78,7 +78,7 @@ export function HomeVideo({ posterSrc, videoSrc, label }: HomeVideoContent) {
                 disabled={!videoSrc}
                 className="absolute top-1/2 left-1/2 z-10 -translate-x-1/2 -translate-y-1/2 rounded-tl-[12px] rounded-bl-[12px] rounded-tr-[1000px] rounded-br-[1000px] bg-brand px-8 py-3 font-tanker text-[28px] leading-[1.2] font-normal tracking-normal text-brand-white uppercase transition-colors duration-200 hover:bg-brand/70 disabled:cursor-not-allowed disabled:opacity-60 md:px-10 md:py-3.5 md:text-[30px]"
               >
-                {label || "Play"}
+                {label}
               </button>
             </>
           ) : null}

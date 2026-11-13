@@ -38,18 +38,22 @@ export default async function AboutPage() {
   return (
     <main className="pt-16 md:pt-24">
       <div>
+      {about.headline.trim() ? (
       <h1 className="text-center font-tanker text-[40px] leading-[1.2] font-normal tracking-normal text-brand-white uppercase md:text-[80px]">
         <RichText text={about.headline} highlight={about.highlight} />
       </h1>
+      ) : null}
+      {about.sub.trim() ? (
       <p className="mx-auto mt-4 max-w-[760px] text-center font-bespoke text-[20px] leading-[1.5] font-normal tracking-normal text-brand-white">
         <RichText text={about.sub} />
       </p>
+      ) : null}
 
       <div className={`mt-14 md:mt-20 ${splitRow}`}>
         <div className={`relative aspect-square overflow-hidden rounded-full ${mediaCol}`}>
           <ContentImage
-            src={portrait?.src ?? "/about-yinka.png"}
-            alt="Yinka T. Jayeola"
+            src={portrait?.src ?? ""}
+            alt=""
             fill
             priority
             sizes="(min-width: 768px) 42vw, 100vw"
@@ -58,13 +62,17 @@ export default async function AboutPage() {
         </div>
 
         <div className="flex w-full min-w-0 flex-col gap-10 text-left">
-          {lead.map((section) => (
-            <section key={section.title}>
-              <h2 className={`${sectionTitle} text-brand-white`}>{section.title}</h2>
+          {lead.map((section, index) => (
+            <section key={`${section.title}-${index}`}>
+              {section.title.trim() ? (
+                <h2 className={`${sectionTitle} text-brand-white`}>{section.title}</h2>
+              ) : null}
+              {section.body.trim() ? (
               <RichParagraphs
                 text={section.body}
                 className={`${body} mt-4 flex flex-col gap-4 text-brand-white`}
               />
+              ) : null}
             </section>
           ))}
         </div>
@@ -74,7 +82,7 @@ export default async function AboutPage() {
       <section className="relative left-1/2 mt-16 -ml-[50vw] w-screen bg-[#F5F1E8] py-16 text-[#1A1A1A] md:mt-24 md:py-24">
         <div className={`mx-auto w-full max-w-[1380px] px-4 md:px-[30px] ${splitRow}`}>
           <ContentImage
-            src={sideImage?.src ?? "/about-img-2.png"}
+            src={sideImage?.src ?? ""}
             alt=""
             width={651}
             height={858}
@@ -82,17 +90,20 @@ export default async function AboutPage() {
           />
 
           <div className="flex w-full min-w-0 flex-col gap-10 text-left">
-            {rest.map((section) => (
-              <section key={section.title}>
-                <h2 className={sectionTitle}>{section.title}</h2>
-                <RichParagraphs text={section.body} className={`${body} mt-4 flex flex-col gap-4`} />
+            {rest.map((section, index) => (
+              <section key={`${section.title}-${index}`}>
+                {section.title.trim() ? <h2 className={sectionTitle}>{section.title}</h2> : null}
+                {section.body.trim() ? (
+                  <RichParagraphs text={section.body} className={`${body} mt-4 flex flex-col gap-4`} />
+                ) : null}
               </section>
             ))}
 
+            {about.bits.filter((note) => note.trim()).length ? (
             <section>
               <h2 className={sectionTitle}>Things worth knowing</h2>
               <ol className="mt-6 flex flex-col gap-6">
-                {about.bits.map((note, index) => (
+                {about.bits.filter((note) => note.trim()).map((note, index) => (
                   <li key={note} className="flex items-start gap-4">
                     <span className="font-tanker text-[40px] leading-[1.2] font-normal tracking-normal">
                       {String(index + 1).padStart(2, "0")}
@@ -102,6 +113,7 @@ export default async function AboutPage() {
                 ))}
               </ol>
             </section>
+            ) : null}
           </div>
         </div>
       </section>

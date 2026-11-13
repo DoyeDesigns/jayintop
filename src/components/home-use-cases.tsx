@@ -180,9 +180,11 @@ function UseCaseCard({
         >
           <div className="flip-card grid w-full">
             <div className="flip-face flip-front relative col-start-1 row-start-1 rounded-lg border border-[#B9B9B9] bg-white p-1.5 shadow-sm md:p-2">
+              {item.title ? (
               <div className="flip-tag absolute top-2 right-px z-[2] max-w-[calc(100%-8px)] rounded-sm bg-[#F9A000] px-2 py-1 font-tanker text-[9px] leading-[1.1] font-normal tracking-normal text-[#131313] uppercase md:top-4 md:px-4 md:py-2 md:text-[12px]">
                 {item.title}
               </div>
+              ) : null}
               <Media imageSrc={item.imageSrc} videoSrc={item.videoSrc} alt={item.title} />
             </div>
 
@@ -191,12 +193,16 @@ function UseCaseCard({
                 <Media imageSrc={item.imageSrc} videoSrc={item.videoSrc} alt="" mirror />
                 <div className="absolute inset-0 rounded-md bg-black/60 backdrop-blur-[4px]" />
                 <div className="absolute inset-0 flex flex-col items-start justify-center gap-1.5 p-2 md:gap-2 md:p-3">
+                  {item.brand ? (
                   <span className="font-tanker text-[9px] leading-[1.2] font-normal tracking-wider text-brand-white uppercase md:text-[12px]">
                     {item.brand}
                   </span>
+                  ) : null}
+                  {item.tag ? (
                   <span className="inline-block max-w-full rounded-sm bg-[#F9A000] px-1.5 py-0.5 font-tanker text-[8px] leading-[1.2] font-normal tracking-normal text-[#131313] uppercase md:px-2 md:py-1 md:text-[10px]">
                     {item.tag}
                   </span>
+                  ) : null}
                 </div>
               </div>
             </div>
@@ -267,14 +273,20 @@ function CategoryCard({
       <div className="relative aspect-square w-full overflow-hidden rounded-lg">
         <Media imageSrc={item.imageSrc} videoSrc={item.videoSrc} alt={item.title} fillFrame />
       </div>
+      {item.title.trim() || item.body.trim() ? (
       <div className="mt-4 flex w-full flex-col gap-2">
+        {item.title.trim() ? (
         <h3 className="font-tanker text-[20px] leading-[1.2] font-normal tracking-normal text-black uppercase md:text-[30px]">
           {item.title}
         </h3>
+        ) : null}
+        {item.body.trim() ? (
         <p className="font-bespoke text-[16px] leading-[1.5] font-normal tracking-normal text-black">
           {item.body}
         </p>
+        ) : null}
       </div>
+      ) : null}
     </button>
   );
 }
@@ -505,7 +517,7 @@ export function HomeUseCases({
   const stackBase = anim ? (anim.phase === 0 ? anim.from : anim.to) : active;
 
   return (
-    <section className="relative left-1/2 -ml-[50vw] flex w-screen flex-col items-center bg-brand-white px-4 pt-16 pb-5 text-[#1A1A1A] md:px-[30px] md:pt-24 md:pb-5">
+    <section className="relative left-1/2 -ml-[50vw] flex w-screen flex-col items-center px-4 pt-16 pb-5 text-brand-white md:px-[30px] md:pt-24 md:pb-16">
       <h2 className="relative z-20 text-center font-tanker text-[40px] leading-[1.2] font-normal tracking-normal uppercase md:text-[60px]">
         What I do
       </h2>

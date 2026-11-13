@@ -1,6 +1,7 @@
 "use client";
 
 import { ChevronDown, ChevronUp } from "lucide-react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   AddButton,
@@ -9,7 +10,12 @@ import {
   Subsection,
 } from "@/components/admin/fields";
 import { useAdminContent } from "@/components/admin/content-provider";
-import { createId, type CaseItem, type CaseStatus } from "@/lib/admin-content";
+import {
+  caseMatchesFilter,
+  createId,
+  type CaseItem,
+  type CaseStatus,
+} from "@/lib/admin-content";
 
 const statusLabel: Record<CaseStatus, string> = {
   published: "Live",
@@ -26,12 +32,14 @@ const statusClass: Record<CaseStatus, string> = {
 function blankCase(): CaseItem {
   return {
     id: createId(),
-    title: "Untitled project",
+    title: "",
     client: "",
     role: "",
     credits: [],
     categories: [],
-    year: String(new Date().getFullYear()),
+    year: "",
+    liveUrl: "",
+    liveHidden: false,
     status: "draft",
     cover: null,
     coverMobile: null,
@@ -46,6 +54,20 @@ function blankCase(): CaseItem {
 export function CasesEditor() {
   const router = useRouter();
   const { content, mutate } = useAdminContent();
+  const filters = content.work.filters.filter((item) => item.label.trim());
+  const [filter, setFilter] = useState(
+    () => filters.find((item) => item.all)?.label ?? "All",
+  );
+  const active = filters.find((item) => item.label === filter) ??
+    filters.find((item) => item.all) ?? { label: "All", all: true, hidden: false };
+
+  const listed = useMemo(
+    () =>
+      content.cases.filter(
+        (item) => Boolean(active.all) || caseMatchesFilter(item, active.label),
+      ),
+    [content.cases, active.all, active.label],
+  );
 
   const add = () => {
     const item = blankCase();
@@ -55,12 +77,19 @@ export function CasesEditor() {
     router.push(`/admin/case-studies/${item.id}`);
   };
 
-  const move = (index: number, direction: -1 | 1) => {
+  const move = (id: string, direction: -1 | 1) => {
     mutate((draft) => {
-      const next = index + direction;
-      if (next < 0 || next >= draft.cases.length) return;
-      const [item] = draft.cases.splice(index, 1);
-      draft.cases.splice(next, 0, item);
+      const ids = draft.cases
+        .filter((item) => Boolean(active.all) || caseMatchesFilter(item, active.label))
+        .map((item) => item.id);
+      const position = ids.indexOf(id);
+      const swapId = ids[position + direction];
+      if (position < 0 || !swapId) return;
+      const from = draft.cases.findIndex((item) => item.id === id);
+      const to = draft.cases.findIndex((item) => item.id === swapId);
+      if (from < 0 || to < 0) return;
+      const [item] = draft.cases.splice(from, 1);
+      draft.cases.splice(to, 0, item);
     });
   };
 
@@ -105,13 +134,39 @@ export function CasesEditor() {
         title="Case studies"
         hint="Hiding is not deleting. A hidden case study stays here in full and disappears from the public work page. Use hide for client work still under wraps, and delete only when you never want it back."
       >
+        {filters.length ? (
+          <nav aria-label="Filter by category" className="flex flex-wrap gap-2">
+            {filters.map((item) => {
+              const selected = active.label === item.label;
+              return (
+                <button
+                  key={item.all ? "all" : item.label}
+                  type="button"
+                  onClick={() => setFilter(item.label)}
+                  className={`inline-flex h-8 cursor-pointer items-center rounded-[6px] border px-3 font-tanker text-[15px] leading-[1.2] font-normal tracking-normal uppercase ${
+                    selected
+                      ? "border-brand text-brand"
+                      : "border-[#373A41] text-brand-white hover:border-brand hover:text-brand"
+                  }`}
+                >
+                  {item.label}
+                  {item.hidden && !item.all ? " · hidden" : ""}
+                </button>
+              );
+            })}
+          </nav>
+        ) : null}
         {content.cases.length === 0 ? (
           <p className="font-inter text-[14px] leading-[20px] text-[#94979C]">
             No case studies yet.
           </p>
+        ) : listed.length === 0 ? (
+          <p className="font-inter text-[14px] leading-[20px] text-[#94979C]">
+            No case studies in {active.label}.
+          </p>
         ) : (
           <ul className="flex flex-col">
-            {content.cases.map((item, index) => (
+            {listed.map((item, index) => (
               <li
                 key={item.id}
                 className="flex flex-col gap-3 border-b border-[#22262F] py-4 md:flex-row md:items-center md:justify-between"
@@ -134,7 +189,7 @@ export function CasesEditor() {
                     type="button"
                     aria-label="Move up"
                     disabled={index === 0}
-                    onClick={() => move(index, -1)}
+                    onClick={() => move(item.id, -1)}
                     className="inline-flex size-8 cursor-pointer items-center justify-center rounded-[6px] border border-[#373A41] text-brand-white disabled:opacity-30"
                   >
                     <ChevronUp className="size-4" aria-hidden />
@@ -142,8 +197,8 @@ export function CasesEditor() {
                   <button
                     type="button"
                     aria-label="Move down"
-                    disabled={index === content.cases.length - 1}
-                    onClick={() => move(index, 1)}
+                    disabled={index === listed.length - 1}
+                    onClick={() => move(item.id, 1)}
                     className="inline-flex size-8 cursor-pointer items-center justify-center rounded-[6px] border border-[#373A41] text-brand-white disabled:opacity-30"
                   >
                     <ChevronDown className="size-4" aria-hidden />

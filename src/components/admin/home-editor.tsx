@@ -15,6 +15,7 @@ import {
 import { useAdminContent } from "@/components/admin/content-provider";
 import {
   categoryFilterEntries,
+  caseMatchesFilter,
   fillCornerFromProject,
   createWorkFilter,
   moveWorkFilter,
@@ -173,13 +174,36 @@ export function HomeEditor() {
     });
   };
 
-  const projectOptions = [
-    { value: "", label: "Custom (upload or type)" },
-    ...content.cases.map((entry) => ({
-      value: entry.id,
-      label: entry.title.trim() || entry.id,
-    })),
-  ];
+  const projectOption = (entry: CaseItem) => ({
+    value: entry.id,
+    label: entry.title.trim() || entry.id,
+  });
+
+  const projectSelect = (categoryLabel: string, usedIds: string[], currentId: string) => {
+    const available = (entry: CaseItem) =>
+      entry.id === currentId || !usedIds.includes(entry.id);
+    const inCategory = content.cases.filter(
+      (entry) => caseMatchesFilter(entry, categoryLabel) && available(entry),
+    );
+    const others = content.cases.filter(
+      (entry) => !caseMatchesFilter(entry, categoryLabel) && available(entry),
+    );
+    return {
+      options: [{ value: "", label: "Choose a project…" }],
+      groups: [
+        {
+          label: inCategory.length
+            ? `In this category (${inCategory.length})`
+            : "In this category (none yet)",
+          options: inCategory.map(projectOption),
+        },
+        {
+          label: "Any project",
+          options: others.map(projectOption),
+        },
+      ],
+    };
+  };
 
   return (
     <EditorPage>
@@ -226,6 +250,12 @@ export function HomeEditor() {
           value={home.heroCta}
           onChange={(value) => setPath("home.heroCta", value)}
         />
+        <ImageField
+          label="Portrait"
+          help="Circle photo in the hero. 9 MB maximum."
+          value={home.heroImage ?? null}
+          onChange={(image) => setPath("home.heroImage", image)}
+        />
       </Subsection>
 
       <Subsection
@@ -254,6 +284,12 @@ export function HomeEditor() {
           help="Leave a blank line between paragraphs."
           value={home.beliefBody}
           onChange={(value) => setPath("home.beliefBody", value)}
+        />
+        <ImageField
+          label="Photo"
+          help="Image on the right of this block. 9 MB maximum."
+          value={home.beliefImage ?? null}
+          onChange={(image) => setPath("home.beliefImage", image)}
         />
       </Subsection>
 
@@ -312,12 +348,16 @@ export function HomeEditor() {
                   Corner cards for this tab
                 </p>
                 <p className="font-inter text-[14px] leading-[20px] font-normal text-[#94979C]">
-                  Four floating images shown when this category is active.
+                  Four floating cards for this tab. Pick from this category first. Use Any project if you need to fill leftover spaces.
                 </p>
                 {service.corners.map((corner, cornerIndex) => {
                   const linked = content.cases.find(
                     (entry) => entry.id === corner.projectId,
                   );
+                  const usedIds = service.corners
+                    .map((entry, index) => (index === cornerIndex ? "" : entry.projectId))
+                    .filter(Boolean);
+                  const select = projectSelect(item.label, usedIds, corner.projectId);
                   return (
                     <div
                       key={`corner-${filterIndex}-${cornerIndex}`}
@@ -328,12 +368,13 @@ export function HomeEditor() {
                       </p>
                       <SelectField
                         label="From project"
-                        help="Fills title, brand, tag, link, and image from a case study."
+                        help="Projects in this category are listed first. Any project is for leftover spaces."
                         value={corner.projectId || ""}
                         onChange={(projectId) =>
                           applyProject(item.label, cornerIndex, projectId)
                         }
-                        options={projectOptions}
+                        options={select.options}
+                        groups={select.groups}
                       />
                       {corner.projectId ? (
                         <SelectField

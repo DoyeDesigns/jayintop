@@ -94,6 +94,20 @@ export function RichText({
   return <>{richNodes(text, highlight)}</>;
 }
 
+function normalizeBreaks(text: string) {
+  return text.replace(/\r\n/g, "\n").replace(/\u2028|\u2029/g, "\n");
+}
+
+function richLines(text: string) {
+  const lines = text.split("\n");
+  return lines.map((line, index) => (
+    <Fragment key={index}>
+      {index > 0 ? <br /> : null}
+      {richNodes(line)}
+    </Fragment>
+  ));
+}
+
 export function RichParagraphs({
   text,
   className,
@@ -101,15 +115,17 @@ export function RichParagraphs({
   text: string;
   className: string;
 }) {
-  const parts = text
+  const parts = normalizeBreaks(text)
     .split(/\n\s*\n/)
     .map((part) => part.trim())
     .filter(Boolean);
 
+  if (!parts.length) return null;
+
   return (
     <div className={className}>
-      {(parts.length ? parts : [text]).map((part) => (
-        <p key={part}>{richNodes(part)}</p>
+      {parts.map((part, index) => (
+        <p key={`${index}-${part.slice(0, 24)}`}>{richLines(part)}</p>
       ))}
     </div>
   );

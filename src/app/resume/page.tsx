@@ -8,7 +8,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const { resume } = await readSiteContent();
   const description = [resume.name, resume.role].filter(Boolean).join(", ");
   return {
-    title: resume.title || "Resume",
+    title: resume.title.trim() || undefined,
     description: description || resume.title,
   };
 }
@@ -18,9 +18,11 @@ export default async function ResumePage() {
 
   return (
     <main className="py-16 md:py-24">
+      {resume.title.trim() ? (
       <h1 className="text-center font-tanker text-[40px] leading-[1.2] font-normal tracking-normal text-brand-white uppercase md:text-[80px]">
         {resume.title}
       </h1>
+      ) : null}
       <div className="mt-16">
         <Resume resume={resume} />
       </div>

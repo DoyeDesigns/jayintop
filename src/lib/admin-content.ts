@@ -75,6 +75,8 @@ export type CaseItem = {
   credits: CaseCredit[];
   categories: string[];
   year: string;
+  liveUrl: string;
+  liveHidden: boolean;
   status: CaseStatus;
   cover: AdminImage | null;
   coverMobile: AdminImage | null;
@@ -131,9 +133,11 @@ export type AdminContent = {
     heroLeft: string;
     heroRight: string;
     heroCta: string;
+    heroImage: AdminImage | null;
     beliefEyebrow: string;
     beliefLead: string;
     beliefBody: string;
+    beliefImage: AdminImage | null;
     services: Service[];
     video: {
       poster: AdminImage | null;
@@ -186,152 +190,22 @@ export function createId() {
 
 function defaultResume(): ResumeContent {
   return {
-    title: "My resume",
-    name: "Yinka Jayeola",
-    role: "UI/UX Designer",
-    contacts: [
-      { text: "yinka@jayintop.com", href: "mailto:yinka@jayintop.com" },
-      { text: "linkedin.com/in/jayintop", href: "https://linkedin.com/in/jayintop" },
-      { text: "+2348137645364", href: "tel:+2348137645364" },
-    ],
-    sections: [
-      {
-        title: "Bio",
-        entries: [
-          {
-            title: "",
-            date: "",
-            paragraphs: [
-              "Dynamic Senior Product Designer with 6+ years of experience delivering user-centred enterprise solutions in fintech, govtech, healthtech, and e-commerce for clients across the UK, USA, Australia, and Nigeria. Expert in end-to-end product design (100–1,600+ screen scopes), design systems, marketplace/payment flows, and brand identity. Founder of Jayintop Studio, a productized design agency focused on scalable UI/UX and branding services that drive conversion improvements (e.g., 35%+ uplift) and support multi-million USD operations. Passionate about human-centred design that creates seamless, profitable experiences. Open to senior/lead roles in innovative global teams.",
-            ],
-          },
-        ],
-      },
-      {
-        title: "Education",
-        entries: [
-          {
-            title: "OBAFEMI AWOLOWO UNIVERSITY",
-            date: "2013 – 2020",
-            paragraphs: ["Bsc. Chemical Engineering"],
-          },
-        ],
-      },
-      {
-        title: "Experience",
-        entries: [
-          {
-            title: "FOUNDER & CREATIVE DIRECTOR, JAYINTOP STUDIO",
-            date: "01/2025 – Present · Nigeria (Remote Global)",
-            paragraphs: [
-              "Founded and scaled a productized design agency offering streamlined services in brand identity, UI/UX audits, website design, social media kits, marketing collateral, and full product development.",
-              "Delivered 25+ projects for international startups and enterprises, including enterprise dashboards and brand systems, fostering repeat business and portfolio growth in fintech/e-commerce.",
-              "Led end-to-end strategy, operations, and client delivery, emphasizing agile workflows and accessibility (WCAG AA) to enhance user engagement and business outcomes.",
-            ],
-          },
-          {
-            title: "Senior Product Design Lead (Contract), FixMyBuild (UK)",
-            date: "01/2022 – 12/2023 · UK (Remote)",
-            paragraphs: [
-              "Sole designer for a two-sided home-services marketplace; shipped v1.0 (120+ screens) from pre-seed to 10k+ downloads.",
-              "Owned onboarding, quote engine, real-time chat, Stripe escrow payments, and trust/safety features; drove 35% faster quote-to-booking conversion via 60+ user interviews and usability testing.",
-            ],
-          },
-          {
-            title: "Senior Product & Brand Identity Designer, Upwork, PeoplePerHour & Fiverr",
-            date: "01/2021 – Present · Global (Remote)",
-            paragraphs: [
-              "Top 0.1% rated across platforms; executed $15k–$80k contracts in brand identity, SaaS redesigns, and fintech dashboards for UK/US/EU clients.",
-              "Shipped 200+ projects, including luxury branding and e-commerce platforms, earning 5-star reviews for strategic depth, rapid iteration, and client-focused outcomes.",
-            ],
-          },
-          {
-            title: "SENIOR DESIGN LEAD (CONTRACT), FROSTFLOW FOODS",
-            date: "01/2025 – Present · Nigeria (Remote Global)",
-            paragraphs: [
-              "Leading design of a three-sided frozen-food e-commerce ecosystem (consumer, wholesale, retailer portals), owning unified design system, subscription flows, bulk ordering, and checkout optimization across web/mobile.",
-              "Collaborated with UK founders on remote sprints, conducting UX research to ensure WCAG AA compatibility, mobile responsiveness, and 25%+ conversion uplift in high-order-value experiences.",
-            ],
-          },
-          {
-            title: "Senior Product Designer / Design Lead, ThoughtCab Design Agency",
-            date: "12/2021 – 12/2024 · United State (Remote)",
-            paragraphs: [
-              "Led UI/UX for high-growth startups in fintech, healthtech, and edtech; owned 100–400+ screen scopes, mentoring 12+ juniors and delivering Root Diamonds, Coral Health, and Root Ally platforms.",
-              "Ensured seamless developer handoff, accessibility compliance, and iterative improvements based on analytics, contributing to live deployments with enhanced user retention.",
-            ],
-          },
-          {
-            title: "DESIGN LEAD, THOUGHTCAB DESIGN AGENCY",
-            date: "12/2021 – 12/2024 · United State (Remote)",
-            paragraphs: [
-              "Led UI/UX for high-growth startups in fintech, healthtech, and edtech; owned 100–400+ screen scopes, mentoring 12+ juniors and delivering Root Diamonds, Coral Health, and Root Ally platforms.",
-              "Ensured seamless developer handoff, accessibility compliance, and iterative improvements based on analytics, contributing to live deployments with enhanced user retention.",
-            ],
-          },
-        ],
-      },
-      {
-        title: "Skill",
-        entries: [
-          {
-            title: "RESEARCH",
-            date: "",
-            paragraphs: [
-              "User Research · Journey Mapping · Heuristic Evaluations · Accessibility Audits (WCAG 2.2+) · Information Architecture · Usability Testing",
-            ],
-          },
-          {
-            title: "CORE DESIGN",
-            date: "",
-            paragraphs: [
-              "Product Design · UI/UX Design · Design Systems · Interaction Design · Brand Identity · Creative Direction",
-            ],
-          },
-          {
-            title: "UI/UX TOOLS",
-            date: "",
-            paragraphs: [
-              "Figma (Expert) · Framer · Adobe Suite · After Effects · Miro · FigJam · Webflow · Penpot · Notion · Jira",
-            ],
-          },
-          {
-            title: "SOFT SKILLS",
-            date: "",
-            paragraphs: [
-              "· Critical Thinker · Analytical Reasoning · Remote Leadership · Attention to Detail · Receptive to Feedback · Problem Solver · Excellent Written Communication · Consistent & Honest Judgment · Empathetic",
-            ],
-          },
-        ],
-      },
-      {
-        title: "Certificates & training",
-        entries: [
-          { title: "GOOGLE UX DESIGN CERTIFICATE", date: "12/01/2025", paragraphs: [] },
-          { title: "MASTER DIGITAL PRODUCT DESIGN, UDEMY", date: "12/01/2025", paragraphs: [] },
-          { title: "ULTIMATE FIGMA MASTERCLASS, DESIGNERSHIP", date: "12/01/2025", paragraphs: [] },
-          { title: "FOUNDATIONS OF UX DESIGN, COURSERA", date: "12/01/2025", paragraphs: [] },
-          { title: "MASTER DIGITAL PRODUCT DESIGN, UDEMY", date: "12/01/2025", paragraphs: [] },
-          { title: "PROMPT ENGINEERING FOR EVERYONE, COURSERA", date: "12/01/2025", paragraphs: [] },
-          { title: "TECHNICAL WRITING FUNDAMENTALS, GOOGLE", date: "12/01/2025", paragraphs: [] },
-          { title: "AI FOR EVERYONE, ANDREW NG / COURSERA", date: "12/01/2025", paragraphs: [] },
-          { title: "ENGLISH", date: "", paragraphs: ["Native/Bilingual"] },
-          { title: "YORUBA", date: "", paragraphs: ["Native/Bilingual"] },
-        ],
-      },
-    ],
+    title: "",
+    name: "",
+    role: "",
+    contacts: [],
+    sections: [],
   };
 }
 
 export function defaultContent(): AdminContent {
   return {
     site: {
-      name: "Yinka T. Jayeola",
-      tagline: "Brand identity and product UI/UX design",
+      name: "",
+      tagline: "",
       email: "",
-      metaTitle: "Yinka T. Jayeola, Brand Identity and Product UI/UX Designer",
-      metaDesc:
-        "Brand identity and product UI/UX design for startups in fintech, healthtech and edtech.",
+      metaTitle: "",
+      metaDesc: "",
       socials: [
         { label: "Instagram", url: "", hidden: false },
         { label: "X", url: "", hidden: false },
@@ -343,132 +217,47 @@ export function defaultContent(): AdminContent {
       ],
     },
     home: {
-      heroName: "Yinka T. Jayeola",
-      heroHeadline: "Design that works as well as it looks.",
-      heroHighlight: "works",
-      heroLeft:
-        "Brand identity and product UI/UX design for startups in fintech, healthtech and edtech. I take an identity from the first brief to a finished system, and a product from the first idea to a shipped release.",
-      heroRight:
-        "Every project runs the same four steps: discovery, brief, creation, delivery. Nothing gets designed until we both agree in writing what it needs to achieve.",
-      heroCta: "See my work",
-      beliefEyebrow: "What I believe",
-      beliefLead: "Good design has a job to do.",
-      beliefBody:
-        "A logo that only looks right on a clean white background is not finished. A screen that looks great and loses customers is not finished either. If it looks good and does not work, it is decoration, and decoration is easy to find.\n\nSo I start with the problem, not the picture. Who uses this. What stops them. What counts as success. We agree on the answers first, then I design, then we check the result against what we agreed.",
-      services: [
-        {
-          title: "All case studies",
-          copy: "A few projects taken from the first sketch through to a finished system. Open one to see how it was built.",
-          image: null,
-          corners: emptyCorners(),
-        },
-        {
-          title: "Logo and brand design",
-          copy: "Your brand looks smaller than the work you actually do. I fix that with a logo, colours, type and clear rules for using them.",
-          image: null,
-          corners: emptyCorners(),
-        },
-        {
-          title: "Product UI/UX",
-          copy: "People are dropping out of your product and nobody can say exactly where. I find out, redesign the screens that lose them, and give your developers files they can build from.",
-          image: null,
-          corners: emptyCorners(),
-        },
-        {
-          title: "Packaging",
-          copy: "The brand looks sharp on the website and falls apart in the pitch deck, the packaging and the feed. I extend it everywhere else you show up.",
-          image: null,
-          corners: emptyCorners(),
-        },
-      ],
+      heroName: "",
+      heroHeadline: "",
+      heroHighlight: "",
+      heroLeft: "",
+      heroRight: "",
+      heroCta: "",
+      heroImage: null,
+      beliefEyebrow: "",
+      beliefLead: "",
+      beliefBody: "",
+      beliefImage: null,
+      services: [],
       video: {
-        poster: { src: "/magic.png", name: "magic.png", w: 1600, h: 900 },
+        poster: null,
         src: "",
         label: "Play",
         hidden: false,
       },
     },
     about: {
-      eyebrow: "About me",
-      headline:
-        "I make brands look like the real thing, and products simple to use.",
-      highlight: "simple to use",
-      sub: "I am Yinka T. Jayeola, a brand identity and product UI/UX designer. Most people know me as Jayintop.",
-      sections: [
-        {
-          title: "The work",
-          body: "I do two things, and only two, because I would rather be excellent at a pair of them than average at ten.\n\n**Brand identity.** A logo, a colour and type system, and clear rules for using them. Built to hold up on a small label and on a shop front, and simple enough that your team can apply it without calling me.\n\n**Product design.** The screens people actually use. Sign up, checkout, payments, messaging and the design system behind them. Mostly for startups in fintech, healthtech and edtech, where a confusing screen costs real money.",
-          media: null,
-        },
-        {
-          title: "The reason",
-          body: "Most design fails quietly. The logo only works on a clean background. The screen looks lovely and loses customers. Nobody calls it a failure. It just never earns anything back.\n\nI would rather make the other kind. Work that carries your idea and still does its job once real people get their hands on it. That is the whole standard, and I hold every project to it.\n\nThe longer aim is bigger than any single job. I want to build a practice worth respecting in this industry, and to give something useful back to other designers along the way.",
-          media: null,
-        },
-        {
-          title: "The way I work",
-          body: "Four steps, every time. **Discovery, brief, creation, delivery.** Nothing gets designed until we have both agreed in writing what it needs to achieve.\n\nResearch comes before drawing. I have run more than sixty user interviews on a single project just to check a direction was worth building. I write decisions down instead of defending them in a meeting, and I show progress at agreed points rather than saving one big reveal for the end.\n\nDelivery means what it says. Files named and organised, accessibility handled from the first screen, and a handover your developers can build from without a follow up call.",
-          media: null,
-        },
-      ],
-      bits: [
-        "I draw every logo by hand first. The good ones survive the paper.",
-        "I have mentored twelve junior designers, and I still take notes when other people review work.",
-        "Accessibility is in my files from day one, not added at the end.",
-        "I play chess. It is where I learned to read the whole board before moving.",
-        "I would rather you tell me the truth about a design than be polite about it.",
-      ],
-      closeLine: "For people who want the work to actually work.",
-      closeCta: "See what I have made",
+      eyebrow: "",
+      headline: "",
+      highlight: "",
+      sub: "",
+      sections: [],
+      bits: [],
+      closeLine: "",
+      closeCta: "",
     },
     work: {
-      title: "Selected work",
-      subtitle:
-        "A few projects taken from the first sketch through to a finished system. Open one to see how it was built.",
-      filters: [
-        { label: "All", hidden: false, all: true },
-        { label: "All case studies", hidden: false },
-        { label: "Logo and brand design", hidden: false },
-        { label: "Product UI/UX", hidden: false },
-        { label: "Packaging", hidden: false },
-      ],
+      title: "",
+      subtitle: "",
+      filters: [{ label: "All", hidden: false, all: true }],
     },
     contact: {
-      headline: "Tell me what you are building",
-      body: "Send a short note about the project and what it needs to achieve. If I am not the right person for it, I will say so and point you somewhere better.",
-      cta: "Start a project",
+      headline: "",
+      body: "",
+      cta: "",
     },
     resume: defaultResume(),
-    testimonials: [
-      {
-        quote:
-          "He served as our sole design partner from pre-seed through launch, delivering over 120 screens. Quote to booking conversion improved by 35%. Version 1.0 reached 10,000 downloads.",
-        name: "Nikolas Gibbons",
-        role: "Founder, FixMyBuild",
-        featured: true,
-      },
-      {
-        quote:
-          "He is patient, and because of that he produces exactly what I need at high quality. The logo work is professional and I will be using him again.",
-        name: "Brett Henry Murphy",
-        role: "Product Manager",
-        featured: true,
-      },
-      {
-        quote:
-          "I came to him with a completely different task, but he suggested changing my logo first. The new one beat my original more than ten times over.",
-        name: "Design Magic",
-        role: "Powersurge",
-        featured: true,
-      },
-      {
-        quote:
-          "Excellent service, delivered two days earlier than expected. Constant communication throughout the entire process.",
-        name: "Samirmatin",
-        role: "Powersurge",
-        featured: false,
-      },
-    ],
+    testimonials: [],
     cases: [],
   };
 }
@@ -633,6 +422,12 @@ export function categoryFilterEntries(filters: WorkFilterItem[]) {
 
 function filterKey(label: string) {
   return label.trim().toLowerCase();
+}
+
+export function caseMatchesFilter(item: { categories: string[] }, label: string) {
+  const target = filterKey(label);
+  if (!target) return false;
+  return item.categories.some((entry) => filterKey(entry) === target);
 }
 
 function ensureAllFilter(filters: WorkFilterItem[]) {
@@ -809,6 +604,8 @@ function normalizeHome(home: AdminContent["home"]): AdminContent["home"] {
 
   return {
     ...home,
+    heroImage: asImage(home?.heroImage),
+    beliefImage: asImage(home?.beliefImage),
     services: services.map((item) => {
       const rawCorners = (item as Service)?.corners;
       const useLegacy = !Array.isArray(rawCorners) && hasLegacy;
@@ -836,25 +633,10 @@ export function visibleFilterLabels(filters: WorkFilterItem[]) {
     .map((item) => ({ label: item.label, all: Boolean(item.all) }));
 }
 
-const starterBodies: Record<string, string> = {
-  "the work":
-    "I do two things, and only two, because I would rather be excellent at a pair of them than average at ten.",
-  "the reason":
-    "Most design fails quietly. The logo only works on a clean background. The screen looks lovely and loses customers.",
-  "the way i work":
-    "Four steps, every time. Discovery, brief, creation, delivery. Nothing gets designed until we have both agreed in writing what it needs to achieve.",
-};
-
 function normalizeAbout(about: AdminContent["about"]): AdminContent["about"] {
-  const starters = defaultContent().about.sections;
   return {
     ...about,
-    sections: about.sections.map((section) => {
-      const key = section.title.trim().toLowerCase();
-      const starter = starters.find((item) => item.title.trim().toLowerCase() === key);
-      if (starter && section.body.trim() === starterBodies[key]) return { ...section, body: starter.body };
-      return section;
-    }),
+    sections: about.sections.map((section) => ({ ...section })),
   };
 }
 
@@ -977,6 +759,8 @@ function normalizeCase(item: CaseItem, filters: WorkFilterItem[] = []): CaseItem
     categories?: unknown;
     credits?: unknown;
     coverMobile?: unknown;
+    liveUrl?: unknown;
+    liveHidden?: unknown;
     showOnHome?: unknown;
     marqueeSource?: unknown;
     marqueeCover?: unknown;

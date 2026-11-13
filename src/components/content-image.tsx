@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { mediaSrc, PLACEHOLDER_IMAGE } from "@/lib/media";
 
 export function ContentImage({
   src,
@@ -19,24 +20,24 @@ export function ContentImage({
   sizes?: string;
   priority?: boolean;
 }) {
-  if (!src) return null;
+  const resolved = mediaSrc(src);
+  const uploaded = resolved.startsWith("data:") || resolved.startsWith("blob:");
+  const plain = uploaded || resolved === PLACEHOLDER_IMAGE || resolved.endsWith(".svg");
 
-  const uploaded = src.startsWith("data:") || src.startsWith("blob:");
-
-  if (uploaded && fill) {
+  if (plain && fill) {
     return (
       <img
-        src={src}
+        src={resolved}
         alt={alt}
-        className={`absolute inset-0 h-full w-full ${className ?? ""}`}
+        className={`absolute inset-0 h-full w-full object-cover ${className ?? ""}`}
       />
     );
   }
 
-  if (uploaded) {
+  if (plain) {
     return (
       <img
-        src={src}
+        src={resolved}
         alt={alt}
         width={width}
         height={height}
@@ -48,7 +49,7 @@ export function ContentImage({
   if (fill) {
     return (
       <Image
-        src={src}
+        src={resolved}
         alt={alt}
         fill
         priority={priority}
@@ -60,7 +61,7 @@ export function ContentImage({
 
   return (
     <Image
-      src={src}
+      src={resolved}
       alt={alt}
       width={width ?? 0}
       height={height ?? 0}

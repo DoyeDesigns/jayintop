@@ -27,6 +27,8 @@ function CardBody({ item }: { item: HomeTestimonial }) {
 }
 
 export function HomeTestimonials({ items }: { items: HomeTestimonial[] }) {
+  if (!items.length) return null;
+
   return (
     <section>
       <MarqueeRow

@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { MarqueeRow } from "@/components/marquee-row";
+import { workPath } from "@/lib/public-work";
 import type { WorkItem } from "@/lib/work";
 
 const rulerPhrase = "Selected works // ".repeat(8);
@@ -39,7 +40,7 @@ export function SelectedWorksStrip({
         {items.map((item) => (
           <li key={item.id} className="shrink-0">
             <Link
-              href={`/selected-work/${item.id}`}
+              href={workPath(item)}
               draggable={false}
               className={`group ${cardClass}`}
             >

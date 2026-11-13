@@ -31,14 +31,15 @@ function columnsFor(items: Testimonial[]) {
 
 export function Testimonials({
   items,
-  closeLine = "For people who want the work to actually work.",
-  closeCta = "See what I have made",
+  closeLine,
+  closeCta,
 }: {
   items?: Testimonial[];
   closeLine?: string;
   closeCta?: string;
 }) {
   const columns = items?.length ? columnsFor(items) : [];
+  if (!columns.length && !closeLine?.trim() && !closeCta?.trim()) return null;
 
   return (
     <section className="relative left-1/2 w-screen -translate-x-1/2">
@@ -69,22 +70,23 @@ export function Testimonials({
           ))}
         </div>
 
-        <div className="hidden md:block mx-auto my-25 max-w-[760px] text-center md:mt-24">
+        {closeLine?.trim() || closeCta?.trim() ? (
+        <div className="hidden mx-auto my-25 max-w-[760px] text-center md:mt-24">
+          {closeLine?.trim() ? (
           <h2 className="font-tanker text-[40px] leading-[1.2] font-normal tracking-normal text-brand-white uppercase md:text-[60px]">
             {closeLine}
           </h2>
-          <p className="mt-4 font-bespoke text-[16px] leading-[1.5] font-normal tracking-normal text-[#C7C3BB]">
-            Tell me what you want to build and what it has to achieve. Every
-            project starts with a discovery session and a written brief — no
-            guesswork, no surprises.
-          </p>
+          ) : null}
+          {closeCta?.trim() ? (
           <Link
             href="/selected-work"
             className="mt-8 inline-flex h-[52px] items-center justify-center rounded-full rounded-tl-none rounded-bl-none bg-brand px-6 font-tanker text-[20px] leading-[1.2] font-normal tracking-normal text-brand-white uppercase transition-colors duration-200 hover:bg-brand/70"
           >
             {closeCta}
           </Link>
+          ) : null}
         </div>
+        ) : null}
       </div>
     </section>
   );
