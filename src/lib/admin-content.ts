@@ -795,6 +795,8 @@ function normalizeCase(item: CaseItem, filters: WorkFilterItem[] = []): CaseItem
     credits: normalizeCredits(raw.credits, item.role),
     categories,
     year: asText(item.year),
+    liveUrl: asText(raw.liveUrl),
+    liveHidden: Boolean(raw.liveHidden),
     status: item.status,
     cover: asImage(item.cover),
     coverMobile: asImage(raw.coverMobile),
