@@ -4,8 +4,11 @@ import { getAdminIdToken } from "@/lib/admin-session";
 import { defaultContent, mergeContent, type AdminContent } from "@/lib/admin-content";
 import { storeContentImages } from "@/lib/cloudinary";
 import {
-  readFirestoreContent,
-  writeFirestoreContent,
+  deleteCmsCase,
+  hasFirebaseEnv,
+  readCmsContent,
+  StaleContentError,
+  writeCmsContent,
   writeFirestoreMessage,
 } from "@/lib/firebase-data";
 
@@ -58,16 +61,8 @@ async function readFileContent() {
   }
 }
 
-function imageSummary(content: AdminContent) {
-  const kinds = { empty: 0, data: 0, cloudinary: 0, local: 0, placeholder: 0, other: 0 };
-  function kind(src: string) {
-    if (!src) return "empty" as const;
-    if (src.startsWith("data:")) return "data" as const;
-    if (src.includes("res.cloudinary.com")) return "cloudinary" as const;
-    if (src.includes("placeholder")) return "placeholder" as const;
-    if (src.startsWith("/")) return "local" as const;
-    return "other" as const;
-  }
+function imageSrcs(content: AdminContent) {
+  const srcs: string[] = [];
   function walk(value: unknown) {
     if (Array.isArray(value)) {
       value.forEach(walk);
@@ -76,110 +71,77 @@ function imageSummary(content: AdminContent) {
     if (!value || typeof value !== "object") return;
     const record = value as Record<string, unknown>;
     if (typeof record.src === "string" && "name" in record) {
-      kinds[kind(record.src)] += 1;
+      srcs.push(record.src);
       return;
     }
     Object.values(record).forEach(walk);
   }
   walk(content);
-  return {
-    kinds,
-    cases: content.cases.length,
-    hero: content.home.heroImage?.src?.slice(0, 90) ?? null,
-    belief: content.home.beliefImage?.src?.slice(0, 90) ?? null,
-    firstCover: content.cases[0]?.cover?.src?.slice(0, 90) ?? null,
-  };
+  return srcs;
 }
 
+function hasDataImage(content: AdminContent) {
+  return imageSrcs(content).some((src) => src.startsWith("data:"));
+}
+
+function liveMatchesWritten(written: AdminContent, live: AdminContent) {
+  if (written.cases.length !== live.cases.length) return false;
+  if (written.cases.some((item, index) => item.id !== live.cases[index]?.id)) return false;
+  const writtenSrcs = imageSrcs(written);
+  const liveSrcs = imageSrcs(live);
+  return writtenSrcs.length === liveSrcs.length && writtenSrcs.every((src, index) => src === liveSrcs[index]);
+}
+
+export { StaleContentError };
+
 export async function readSiteContent() {
-  const raw = await readFirestoreContent().catch(() => null);
-  if (raw) {
-    try {
-      const content = withoutMockCases(mergeContent(defaultContent(), JSON.parse(raw)));
-      // #region agent log
-      fetch("http://127.0.0.1:7408/ingest/f2f8dbe8-7d28-471f-bb2d-6476fc74336b", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "48b4d3" },
-        body: JSON.stringify({
-          sessionId: "48b4d3",
-          runId: "pre-fix",
-          hypothesisId: "A",
-          location: "site-store.ts:readSiteContent",
-          message: "read source firestore",
-          data: { source: "firestore", bytes: raw.length, ...imageSummary(content) },
-          timestamp: Date.now(),
-        }),
-      }).catch(() => {});
-      // #endregion
-      return content;
-    } catch {
-      const file = await readFileContent();
-      // #region agent log
-      fetch("http://127.0.0.1:7408/ingest/f2f8dbe8-7d28-471f-bb2d-6476fc74336b", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "48b4d3" },
-        body: JSON.stringify({
-          sessionId: "48b4d3",
-          runId: "pre-fix",
-          hypothesisId: "A",
-          location: "site-store.ts:readSiteContent",
-          message: "firestore json parse failed",
-          data: { source: file ? "file-after-parse-fail" : "default-after-parse-fail", bytes: raw.length },
-          timestamp: Date.now(),
-        }),
-      }).catch(() => {});
-      // #endregion
-      return file ?? defaultContent();
-    }
+  if (hasFirebaseEnv()) {
+    return withoutMockCases(await readCmsContent());
   }
   const file = await readFileContent();
-  const content = file ?? defaultContent();
-  // #region agent log
-  fetch("http://127.0.0.1:7408/ingest/f2f8dbe8-7d28-471f-bb2d-6476fc74336b", {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "48b4d3" },
-    body: JSON.stringify({
-      sessionId: "48b4d3",
-      runId: "pre-fix",
-      hypothesisId: "A",
-      location: "site-store.ts:readSiteContent",
-      message: "read fallback without firestore",
-      data: { source: file ? "file" : "default", ...imageSummary(content) },
-      timestamp: Date.now(),
-    }),
-  }).catch(() => {});
-  // #endregion
-  return content;
+  return file ?? defaultContent();
 }
 
 export async function writeSiteContent(content: AdminContent) {
   const cleaned = withoutMockCases(content);
+  const stored = await storeContentImages(cleaned);
+  if (hasDataImage(stored)) {
+    throw new Error("An image is still a local data URL. Upload it before saving.");
+  }
+
+  if (!hasFirebaseEnv()) {
+    stored.updatedAt = new Date().toISOString();
+    await writeLocalFile(contentPath, JSON.stringify(stored));
+    return stored;
+  }
+
   const token = await getAdminIdToken();
   if (!token) throw new Error("Sign in again.");
 
-  const stored = await storeContentImages(cleaned);
-  // #region agent log
-  fetch("http://127.0.0.1:7408/ingest/f2f8dbe8-7d28-471f-bb2d-6476fc74336b", {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "48b4d3" },
-    body: JSON.stringify({
-      sessionId: "48b4d3",
-      runId: "pre-fix",
-      hypothesisId: "B",
-      location: "site-store.ts:writeSiteContent",
-      message: "write after cloudinary walk",
-      data: {
-        jsonBytes: JSON.stringify(stored).length,
-        over1mb: JSON.stringify(stored).length > 1_000_000,
-        ...imageSummary(stored),
-      },
-      timestamp: Date.now(),
-    }),
-  }).catch(() => {});
-  // #endregion
-  await writeFirestoreContent(stored, token);
-  await writeLocalFile(contentPath, JSON.stringify(stored));
-  return stored;
+  await writeCmsContent(stored, token, stored.updatedAt);
+  const live = withoutMockCases(await readCmsContent());
+  if (!liveMatchesWritten({ ...stored, updatedAt: live.updatedAt }, live)) {
+    throw new Error("Live Firebase data does not match what was saved.");
+  }
+  return live;
+}
+
+export async function deleteSiteCase(id: string, expectedUpdatedAt: string) {
+  if (!hasFirebaseEnv()) {
+    const current = await readSiteContent();
+    const next = {
+      ...current,
+      cases: current.cases.filter((item) => item.id !== id),
+      updatedAt: new Date().toISOString(),
+    };
+    await writeLocalFile(contentPath, JSON.stringify(next));
+    return next;
+  }
+
+  const token = await getAdminIdToken();
+  if (!token) throw new Error("Sign in again.");
+  await deleteCmsCase(id, token, expectedUpdatedAt);
+  return withoutMockCases(await readCmsContent());
 }
 
 export async function saveContactMessage(message: ContactMessage) {

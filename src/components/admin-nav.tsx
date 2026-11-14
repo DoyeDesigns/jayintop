@@ -151,7 +151,7 @@ function AccountCard({ email, name }: { email: string; name: string | null }) {
 }
 
 function SaveBar() {
-  const { dirty, saving, status, save } = useAdminContent();
+  const { dirty, ready, saving, status, save } = useAdminContent();
   const label = saving ? "Saving" : "Save";
 
   return (
@@ -163,7 +163,7 @@ function SaveBar() {
         <button
           type="button"
           onClick={() => void save()}
-          disabled={!dirty || saving}
+          disabled={!ready || !dirty || saving}
           className="inline-flex h-10 cursor-pointer items-center justify-center rounded-[8px] bg-brand px-5 font-tanker text-[18px] leading-[1.2] font-normal tracking-normal text-white uppercase transition-colors duration-200 hover:bg-brand/70 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-brand"
         >
           {label}

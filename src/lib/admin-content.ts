@@ -169,6 +169,7 @@ export type AdminContent = {
   resume: ResumeContent;
   testimonials: TestimonialItem[];
   cases: CaseItem[];
+  updatedAt: string;
 };
 
 export function emptyBlock(type: ContentBlock["type"]): ContentBlock {
@@ -259,6 +260,7 @@ export function defaultContent(): AdminContent {
     resume: defaultResume(),
     testimonials: [],
     cases: [],
+    updatedAt: "",
   };
 }
 

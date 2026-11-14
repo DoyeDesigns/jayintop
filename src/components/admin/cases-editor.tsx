@@ -53,7 +53,7 @@ function blankCase(): CaseItem {
 
 export function CasesEditor() {
   const router = useRouter();
-  const { content, mutate } = useAdminContent();
+  const { content, mutate, deleteCase } = useAdminContent();
   const filters = content.work.filters.filter((item) => item.label.trim());
   const [filter, setFilter] = useState(
     () => filters.find((item) => item.all)?.label ?? "All",
@@ -123,9 +123,7 @@ export function CasesEditor() {
     ) {
       return;
     }
-    mutate((draft) => {
-      draft.cases = draft.cases.filter((entry) => entry.id !== id);
-    });
+    void deleteCase(id);
   };
 
   return (

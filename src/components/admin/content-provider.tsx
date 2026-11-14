@@ -8,7 +8,11 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { loadSiteContent, saveSiteContent } from "@/app/admin/content-actions";
+import {
+  deletePersistedCase,
+  loadSiteContent,
+  saveSiteContent,
+} from "@/app/admin/content-actions";
 import {
   defaultContent,
   getAt,
@@ -19,18 +23,25 @@ import {
 type AdminContentContextValue = {
   content: AdminContent;
   dirty: boolean;
+  ready: boolean;
   saving: boolean;
   status: string | null;
   setPath: (path: string, value: unknown) => void;
   mutate: (recipe: (draft: AdminContent) => void) => void;
   save: () => Promise<void>;
+  deleteCase: (id: string) => Promise<void>;
   reset: () => void;
 };
 
 const AdminContentContext = createContext<AdminContentContextValue | null>(null);
 
+function applyLive(setContent: (content: AdminContent) => void, setSaved: (value: string) => void, live: AdminContent) {
+  setContent(live);
+  setSaved(JSON.stringify(live));
+}
+
 export function AdminContentProvider({ children }: { children: ReactNode }) {
-  const [content, setContent] = useState<AdminContent>(defaultContent);
+  const [content, setContent] = useState<AdminContent | null>(null);
   const [saved, setSaved] = useState("");
   const [ready, setReady] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -40,10 +51,13 @@ export function AdminContentProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let ignore = false;
-    loadSiteContent().then((loaded) => {
+    loadSiteContent().then((result) => {
       if (ignore) return;
-      setContent(loaded);
-      setSaved(JSON.stringify(loaded));
+      if (!result.ok) {
+        setStatus(result.error);
+        return;
+      }
+      applyLive(setContent, setSaved, result.content);
       setReady(true);
     });
     return () => {
@@ -51,7 +65,7 @@ export function AdminContentProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  const dirty = ready && JSON.stringify(content) !== saved;
+  const dirty = ready && content !== null && JSON.stringify(content) !== saved;
 
   useEffect(() => {
     if (!dirty) return;
@@ -63,49 +77,57 @@ export function AdminContentProvider({ children }: { children: ReactNode }) {
   }, [dirty]);
 
   const save = async () => {
-    if (saving) return;
+    if (!ready || saving || !contentRef.current) return;
     setSaving(true);
     setStatus(null);
-    const snapshot = contentRef.current;
-    // #region agent log
-    fetch("http://127.0.0.1:7408/ingest/f2f8dbe8-7d28-471f-bb2d-6476fc74336b", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "48b4d3" },
-      body: JSON.stringify({
-        sessionId: "48b4d3",
-        runId: "pre-fix",
-        hypothesisId: "C",
-        location: "content-provider.tsx:save",
-        message: "client save clicked",
-        data: {
-          ready,
-          dirty,
-          cases: snapshot.cases.length,
-          looksLikeDefaults: snapshot.cases.length === 0 && !snapshot.home.heroImage,
-          hero: snapshot.home.heroImage?.src?.slice(0, 90) ?? null,
-          belief: snapshot.home.beliefImage?.src?.slice(0, 90) ?? null,
-        },
-        timestamp: Date.now(),
-      }),
-    }).catch(() => {});
-    // #endregion
-    const result = await saveSiteContent(snapshot);
+    const result = await saveSiteContent(contentRef.current);
     setSaving(false);
     if (!result.ok) {
+      if ("content" in result && result.content) {
+        applyLive(setContent, setSaved, result.content);
+      }
       window.alert(result.error);
+      setStatus(result.error);
       return;
     }
-    setContent(result.content);
-    setSaved(JSON.stringify(result.content));
+    applyLive(setContent, setSaved, result.content);
     setStatus("Saved");
   };
 
+  const deleteCase = async (id: string) => {
+    if (!ready || saving || !contentRef.current) return;
+    const persisted = saved ? (JSON.parse(saved) as AdminContent).cases.some((item) => item.id === id) : false;
+    if (!persisted) {
+      setContent((current) => {
+        if (!current) return current;
+        return { ...current, cases: current.cases.filter((item) => item.id !== id) };
+      });
+      return;
+    }
+
+    setSaving(true);
+    setStatus(null);
+    const result = await deletePersistedCase(id, contentRef.current.updatedAt);
+    setSaving(false);
+    if (!result.ok) {
+      if ("content" in result && result.content) {
+        applyLive(setContent, setSaved, result.content);
+      }
+      window.alert(result.error);
+      setStatus(result.error);
+      return;
+    }
+    applyLive(setContent, setSaved, result.content);
+    setStatus("Deleted");
+  };
+
   const setPath = (path: string, value: unknown) => {
-    setContent((current) => setAt(current, path, value));
+    setContent((current) => (current ? setAt(current, path, value) : current));
   };
 
   const mutate = (recipe: (draft: AdminContent) => void) => {
     setContent((current) => {
+      if (!current) return current;
       const next = structuredClone(current);
       recipe(next);
       return next;
@@ -118,13 +140,24 @@ export function AdminContentProvider({ children }: { children: ReactNode }) {
         "Reset all fields to the starter text? Click Save to publish that reset.",
       )
     ) {
-      setContent(defaultContent());
+      setContent({ ...defaultContent(), updatedAt: contentRef.current?.updatedAt ?? "" });
     }
   };
 
   return (
     <AdminContentContext.Provider
-      value={{ content, dirty, saving, status, setPath, mutate, save, reset }}
+      value={{
+        content: content ?? defaultContent(),
+        dirty,
+        ready,
+        saving,
+        status: ready ? status : (status ?? "Loading live content…"),
+        setPath,
+        mutate,
+        save,
+        deleteCase,
+        reset,
+      }}
     >
       {children}
     </AdminContentContext.Provider>

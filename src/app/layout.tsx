@@ -5,6 +5,9 @@ import { bespoke, inter, spaceGrotesk, tanker } from "@/lib/fonts";
 import { readSiteContent } from "@/lib/site-store";
 import "./globals.css";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export async function generateMetadata(): Promise<Metadata> {
   const { site } = await readSiteContent();
   const title = site.metaTitle || "Jayintop";

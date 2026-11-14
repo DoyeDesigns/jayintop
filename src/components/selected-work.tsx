@@ -175,13 +175,9 @@ export function SelectedWork({
             : "mt-8 flex flex-col gap-12"
         }
       >
-        {visible.map((item) => (
-          <li key={item.id}>
-            <article>
-              <Link
-                href={active.all ? workPath(item) : workPath(item, active.label)}
-                className="block"
-              >
+        {visible.map((item) => {
+          const media = (
+            <>
               <div
                 className={`relative w-full overflow-hidden rounded-lg bg-[#1A1A1A] ${
                   logoGrid
@@ -197,27 +193,43 @@ export function SelectedWork({
                   className={`object-cover ${logoGrid ? "" : "md:hidden"}`}
                 />
                 {logoGrid ? null : (
-                <ContentImage
-                  src={item.image}
-                  alt=""
-                  fill
-                  height={640}
-                  sizes="1200px"
-                  className="hidden object-cover md:block"
-                />
+                  <ContentImage
+                    src={item.image}
+                    alt=""
+                    fill
+                    height={640}
+                    sizes="1200px"
+                    className="hidden object-cover md:block"
+                  />
                 )}
               </div>
               {logoGrid ? null : (
-              <div className="mt-4 flex flex-col items-start gap-1 text-left md:flex-row md:items-end md:justify-between">
-                <h2 className="font-tanker md:text-[40px] text-[20px] leading-[1.2] font-normal tracking-normal text-brand-white uppercase">
-                  {item.title}
-                </h2>
-              </div>
+                <div className="mt-4 flex flex-col items-start gap-1 text-left md:flex-row md:items-end md:justify-between">
+                  <h2 className="font-tanker md:text-[40px] text-[20px] leading-[1.2] font-normal tracking-normal text-brand-white uppercase">
+                    {item.title}
+                  </h2>
+                </div>
               )}
-              </Link>
-            </article>
-          </li>
-        ))}
+            </>
+          );
+
+          return (
+            <li key={item.id}>
+              <article>
+                {logoGrid ? (
+                  media
+                ) : (
+                  <Link
+                    href={active.all ? workPath(item) : workPath(item, active.label)}
+                    className="block"
+                  >
+                    {media}
+                  </Link>
+                )}
+              </article>
+            </li>
+          );
+        })}
       </ul>
     </div>
   );
