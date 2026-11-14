@@ -66,7 +66,30 @@ export function AdminContentProvider({ children }: { children: ReactNode }) {
     if (saving) return;
     setSaving(true);
     setStatus(null);
-    const result = await saveSiteContent(contentRef.current);
+    const snapshot = contentRef.current;
+    // #region agent log
+    fetch("http://127.0.0.1:7408/ingest/f2f8dbe8-7d28-471f-bb2d-6476fc74336b", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "48b4d3" },
+      body: JSON.stringify({
+        sessionId: "48b4d3",
+        runId: "pre-fix",
+        hypothesisId: "C",
+        location: "content-provider.tsx:save",
+        message: "client save clicked",
+        data: {
+          ready,
+          dirty,
+          cases: snapshot.cases.length,
+          looksLikeDefaults: snapshot.cases.length === 0 && !snapshot.home.heroImage,
+          hero: snapshot.home.heroImage?.src?.slice(0, 90) ?? null,
+          belief: snapshot.home.beliefImage?.src?.slice(0, 90) ?? null,
+        },
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+    // #endregion
+    const result = await saveSiteContent(snapshot);
     setSaving(false);
     if (!result.ok) {
       window.alert(result.error);

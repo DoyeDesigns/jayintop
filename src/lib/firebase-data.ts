@@ -49,11 +49,49 @@ export async function checkFirestore(): Promise<BackendState> {
 
 export async function readFirestoreContent() {
   const response = await fetch(documentUrl(), { cache: "no-store" });
-  if (!response.ok) return null;
+  if (!response.ok) {
+    const err = await errorMessage(response);
+    // #region agent log
+    fetch("http://127.0.0.1:7408/ingest/f2f8dbe8-7d28-471f-bb2d-6476fc74336b", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "48b4d3" },
+      body: JSON.stringify({
+        sessionId: "48b4d3",
+        runId: "pre-fix",
+        hypothesisId: "A",
+        location: "firebase-data.ts:readFirestoreContent",
+        message: "firestore read failed",
+        data: { status: response.status, err: err.slice(0, 180) },
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+    // #endregion
+    return null;
+  }
   const body = (await response.json()) as {
     fields?: { json?: { stringValue?: string } };
   };
-  return body.fields?.json?.stringValue ?? null;
+  const raw = body.fields?.json?.stringValue ?? null;
+  // #region agent log
+  fetch("http://127.0.0.1:7408/ingest/f2f8dbe8-7d28-471f-bb2d-6476fc74336b", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "48b4d3" },
+    body: JSON.stringify({
+      sessionId: "48b4d3",
+      runId: "pre-fix",
+      hypothesisId: "A",
+      location: "firebase-data.ts:readFirestoreContent",
+      message: "firestore read ok",
+      data: {
+        bytes: raw?.length ?? 0,
+        over1mb: (raw?.length ?? 0) > 1_000_000,
+        hasJsonField: Boolean(body.fields?.json),
+      },
+      timestamp: Date.now(),
+    }),
+  }).catch(() => {});
+  // #endregion
+  return raw;
 }
 
 export async function writeFirestoreContent(content: AdminContent, token: string) {
@@ -70,6 +108,27 @@ export async function writeFirestoreContent(content: AdminContent, token: string
     body: payload,
     cache: "no-store",
   });
+  // #region agent log
+  fetch("http://127.0.0.1:7408/ingest/f2f8dbe8-7d28-471f-bb2d-6476fc74336b", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "48b4d3" },
+    body: JSON.stringify({
+      sessionId: "48b4d3",
+      runId: "pre-fix",
+      hypothesisId: "B",
+      location: "firebase-data.ts:writeFirestoreContent",
+      message: "firestore patch result",
+      data: {
+        status: patched.status,
+        ok: patched.ok,
+        payloadBytes: payload.length,
+        jsonBytes: JSON.stringify(content).length,
+        over1mb: JSON.stringify(content).length > 1_000_000,
+      },
+      timestamp: Date.now(),
+    }),
+  }).catch(() => {});
+  // #endregion
   if (patched.ok) return;
 
   const patchMessage = await errorMessage(patched);

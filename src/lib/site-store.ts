@@ -58,16 +58,98 @@ async function readFileContent() {
   }
 }
 
+function imageSummary(content: AdminContent) {
+  const kinds = { empty: 0, data: 0, cloudinary: 0, local: 0, placeholder: 0, other: 0 };
+  function kind(src: string) {
+    if (!src) return "empty" as const;
+    if (src.startsWith("data:")) return "data" as const;
+    if (src.includes("res.cloudinary.com")) return "cloudinary" as const;
+    if (src.includes("placeholder")) return "placeholder" as const;
+    if (src.startsWith("/")) return "local" as const;
+    return "other" as const;
+  }
+  function walk(value: unknown) {
+    if (Array.isArray(value)) {
+      value.forEach(walk);
+      return;
+    }
+    if (!value || typeof value !== "object") return;
+    const record = value as Record<string, unknown>;
+    if (typeof record.src === "string" && "name" in record) {
+      kinds[kind(record.src)] += 1;
+      return;
+    }
+    Object.values(record).forEach(walk);
+  }
+  walk(content);
+  return {
+    kinds,
+    cases: content.cases.length,
+    hero: content.home.heroImage?.src?.slice(0, 90) ?? null,
+    belief: content.home.beliefImage?.src?.slice(0, 90) ?? null,
+    firstCover: content.cases[0]?.cover?.src?.slice(0, 90) ?? null,
+  };
+}
+
 export async function readSiteContent() {
   const raw = await readFirestoreContent().catch(() => null);
   if (raw) {
     try {
-      return withoutMockCases(mergeContent(defaultContent(), JSON.parse(raw)));
+      const content = withoutMockCases(mergeContent(defaultContent(), JSON.parse(raw)));
+      // #region agent log
+      fetch("http://127.0.0.1:7408/ingest/f2f8dbe8-7d28-471f-bb2d-6476fc74336b", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "48b4d3" },
+        body: JSON.stringify({
+          sessionId: "48b4d3",
+          runId: "pre-fix",
+          hypothesisId: "A",
+          location: "site-store.ts:readSiteContent",
+          message: "read source firestore",
+          data: { source: "firestore", bytes: raw.length, ...imageSummary(content) },
+          timestamp: Date.now(),
+        }),
+      }).catch(() => {});
+      // #endregion
+      return content;
     } catch {
-      return (await readFileContent()) ?? defaultContent();
+      const file = await readFileContent();
+      // #region agent log
+      fetch("http://127.0.0.1:7408/ingest/f2f8dbe8-7d28-471f-bb2d-6476fc74336b", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "48b4d3" },
+        body: JSON.stringify({
+          sessionId: "48b4d3",
+          runId: "pre-fix",
+          hypothesisId: "A",
+          location: "site-store.ts:readSiteContent",
+          message: "firestore json parse failed",
+          data: { source: file ? "file-after-parse-fail" : "default-after-parse-fail", bytes: raw.length },
+          timestamp: Date.now(),
+        }),
+      }).catch(() => {});
+      // #endregion
+      return file ?? defaultContent();
     }
   }
-  return (await readFileContent()) ?? defaultContent();
+  const file = await readFileContent();
+  const content = file ?? defaultContent();
+  // #region agent log
+  fetch("http://127.0.0.1:7408/ingest/f2f8dbe8-7d28-471f-bb2d-6476fc74336b", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "48b4d3" },
+    body: JSON.stringify({
+      sessionId: "48b4d3",
+      runId: "pre-fix",
+      hypothesisId: "A",
+      location: "site-store.ts:readSiteContent",
+      message: "read fallback without firestore",
+      data: { source: file ? "file" : "default", ...imageSummary(content) },
+      timestamp: Date.now(),
+    }),
+  }).catch(() => {});
+  // #endregion
+  return content;
 }
 
 export async function writeSiteContent(content: AdminContent) {
@@ -76,6 +158,25 @@ export async function writeSiteContent(content: AdminContent) {
   if (!token) throw new Error("Sign in again.");
 
   const stored = await storeContentImages(cleaned);
+  // #region agent log
+  fetch("http://127.0.0.1:7408/ingest/f2f8dbe8-7d28-471f-bb2d-6476fc74336b", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "48b4d3" },
+    body: JSON.stringify({
+      sessionId: "48b4d3",
+      runId: "pre-fix",
+      hypothesisId: "B",
+      location: "site-store.ts:writeSiteContent",
+      message: "write after cloudinary walk",
+      data: {
+        jsonBytes: JSON.stringify(stored).length,
+        over1mb: JSON.stringify(stored).length > 1_000_000,
+        ...imageSummary(stored),
+      },
+      timestamp: Date.now(),
+    }),
+  }).catch(() => {});
+  // #endregion
   await writeFirestoreContent(stored, token);
   await writeLocalFile(contentPath, JSON.stringify(stored));
   return stored;
