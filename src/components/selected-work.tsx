@@ -73,15 +73,14 @@ export function SelectedWork({
   const useMenu = options.length > 4;
 
   return (
-    <div className="mt-10">
+    <div className="">
       <div ref={sentinelRef} aria-hidden className="h-px" />
       <div
         ref={barRef}
-        className={`sticky top-[93px] z-30 md:top-[84px] ${
-          stuck
+        className={`sticky top-[93px] z-30 md:top-[84px] ${stuck
             ? "bg-[#131313] bg-[url('/backgrounds/default.svg')] bg-cover bg-fixed bg-center"
             : ""
-        }`}
+          }`}
       >
         <div className="py-4">
           {useMenu ? <div className="relative md:hidden">
@@ -120,9 +119,8 @@ export function SelectedWork({
                             setFilter(item.label);
                             setMenuOpen(false);
                           }}
-                          className={`flex w-full pr-3 py-2 text-left font-tanker text-[20px] leading-[1.2] font-normal tracking-normal uppercase ${
-                            selected ? "text-brand" : "text-brand-white"
-                          }`}
+                          className={`flex w-full pr-3 py-2 text-left font-tanker text-[20px] leading-[1.2] font-normal tracking-normal uppercase ${selected ? "text-brand" : "text-brand-white"
+                            }`}
                         >
                           {item.label}
                         </button>
@@ -136,27 +134,19 @@ export function SelectedWork({
 
           <nav
             aria-label="Filter projects"
-            className={`${useMenu ? "hidden" : "flex"} flex-wrap justify-center gap-6 overflow-x-auto md:flex md:flex-nowrap ${
-              stuck ? "md:justify-start" : "md:justify-center"
-            }`}
+            className={`${useMenu ? "hidden" : "flex"} flex-wrap justify-center gap-6 overflow-x-auto md:flex md:flex-nowrap md:justify-start`}
           >
             {options.map((item) => {
               const selected = filter === item.label;
-              const stuckActive = stuck && selected;
+              // const stuckActive = stuck && selected;
               return (
                 <button
                   key={item.label}
                   type="button"
                   aria-pressed={selected}
                   onClick={() => setFilter(item.label)}
-                  className={`${tabClass} ${
-                    stuck
-                      ? stuckActive
-                        ? "border-transparent bg-brand px-[12px] text-brand-white"
-                        : "border-transparent px-[12px] text-brand-white"
-                      : selected
-                        ? "border-brand pr-[12px] pl-0 text-brand-white"
-                        : "border-transparent pr-[12px] pl-0 text-brand-white"
+                  className={`${tabClass} border-transparent px-[12px] text-brand-white ${
+                    selected ? "bg-brand" : ""
                   }`}
                 >
                   {item.label}
@@ -171,7 +161,7 @@ export function SelectedWork({
         ref={listRef}
         className={
           logoGrid
-            ? "mt-8 grid grid-cols-3 gap-3 md:gap-6"
+            ? "mt-8 grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-6"
             : "mt-8 flex flex-col gap-12"
         }
       >
@@ -182,38 +172,46 @@ export function SelectedWork({
                 href={active.all ? workPath(item) : workPath(item, active.label)}
                 className="block"
               >
-              <div
-                className={`relative w-full overflow-hidden rounded-lg bg-[#1A1A1A] ${
-                  logoGrid
-                    ? "aspect-square"
-                    : "aspect-square md:aspect-[1380/640] lg:aspect-[1380/680] md:max-w-none"
-                }`}
-              >
-                <ContentImage
-                  src={item.imageMobile || item.image}
-                  alt={logoGrid ? item.title : ""}
-                  fill
-                  sizes={logoGrid ? "(min-width: 768px) 33vw, 33vw" : "370px"}
-                  className={`object-cover ${logoGrid ? "" : "md:hidden"}`}
-                />
+                <div
+                  className={`relative w-full overflow-hidden rounded-lg bg-[#1A1A1A] ${logoGrid ? "aspect-square" : ""
+                    }`}
+                >
+                  {logoGrid ? (
+                    <ContentImage
+                      src={item.imageMobile || item.image}
+                      alt={item.title}
+                      fill
+                      sizes="33vw"
+                      className="object-cover"
+                    />
+                  ) : (
+                    <>
+                      <ContentImage
+                        src={item.imageMobile || item.image}
+                        alt=""
+                        width={1280}
+                        height={640}
+                        sizes="370px"
+                        className="block h-auto w-full md:hidden"
+                      />
+                      <ContentImage
+                        src={item.image}
+                        alt=""
+                        width={1280}
+                        height={640}
+                        sizes="1200px"
+                        className="hidden h-auto w-full md:block"
+                      />
+                    </>
+                  )}
+                </div>
                 {logoGrid ? null : (
-                <ContentImage
-                  src={item.image}
-                  alt=""
-                  fill
-                  height={640}
-                  sizes="1200px"
-                  className="hidden object-cover md:block"
-                />
+                  <div className="mt-4 flex flex-col items-start gap-1 text-left md:flex-row md:items-end md:justify-between">
+                    <h2 className="font-tanker md:text-[40px] text-[20px] leading-[1.2] font-normal tracking-normal text-brand-white uppercase">
+                      {item.title}
+                    </h2>
+                  </div>
                 )}
-              </div>
-              {logoGrid ? null : (
-              <div className="mt-4 flex flex-col items-start gap-1 text-left md:flex-row md:items-end md:justify-between">
-                <h2 className="font-tanker md:text-[40px] text-[20px] leading-[1.2] font-normal tracking-normal text-brand-white uppercase">
-                  {item.title}
-                </h2>
-              </div>
-              )}
               </Link>
             </article>
           </li>
