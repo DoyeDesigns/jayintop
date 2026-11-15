@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { SelectedWork } from "@/components/selected-work";
 import { visibleFilterLabels } from "@/lib/admin-content";
-import { publishedWork } from "@/lib/public-work";
+import { publishedWork, resolveFilterLabel } from "@/lib/public-work";
 import { readSiteContent } from "@/lib/site-store";
 
 export const dynamic = "force-dynamic";
@@ -20,8 +20,12 @@ export default async function SelectedWorkPage({
   searchParams: Promise<{ cat?: string | string[] }>;
 }) {
   const content = await readSiteContent();
+  const filters = visibleFilterLabels(content.work.filters);
   const raw = (await searchParams).cat;
-  const initialFilter = typeof raw === "string" ? raw : Array.isArray(raw) ? raw[0] : "";
+  const initialFilter = resolveFilterLabel(
+    typeof raw === "string" ? raw : Array.isArray(raw) ? raw[0] : "",
+    filters,
+  );
 
   return (
     <main className="pb-16 md:pb-24">
@@ -34,9 +38,8 @@ export default async function SelectedWorkPage({
         </p>
       </div>
       <SelectedWork
-        key={initialFilter || "all"}
         items={publishedWork(content)}
-        filters={visibleFilterLabels(content.work.filters)}
+        filters={filters}
         initialFilter={initialFilter}
       />
     </main>

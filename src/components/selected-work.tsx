@@ -2,9 +2,10 @@
 
 import { ChevronDown } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { ContentImage } from "@/components/content-image";
-import { matchesWorkFilter, workPath } from "@/lib/public-work";
+import { matchesWorkFilter, selectedWorkPath, workPath } from "@/lib/public-work";
 import type { WorkItem } from "@/lib/work";
 
 const tabClass =
@@ -19,6 +20,7 @@ export function SelectedWork({
   filters?: { label: string; all?: boolean }[];
   initialFilter?: string;
 }) {
+  const router = useRouter();
   const options = filters.length ? filters : [{ label: "All", all: true }];
   const start =
     options.find((item) => item.label.toLowerCase() === initialFilter.trim().toLowerCase())
@@ -32,6 +34,11 @@ export function SelectedWork({
   const firstFilter = useRef(true);
   const active = options.find((item) => item.label === filter) ?? options[0];
   const activeFilter = active.label;
+
+  const selectFilter = (item: { label: string; all?: boolean }) => {
+    setFilter(item.label);
+    router.replace(selectedWorkPath(item), { scroll: false });
+  };
 
   useEffect(() => {
     if (firstFilter.current) {
@@ -117,7 +124,7 @@ export function SelectedWork({
                           role="option"
                           aria-selected={selected}
                           onClick={() => {
-                            setFilter(item.label);
+                            selectFilter(item);
                             setMenuOpen(false);
                           }}
                           className={`flex w-full pr-3 py-2 text-left font-tanker text-[20px] leading-[1.2] font-normal tracking-normal uppercase ${
@@ -145,7 +152,7 @@ export function SelectedWork({
                   key={item.label}
                   type="button"
                   aria-pressed={selected}
-                  onClick={() => setFilter(item.label)}
+                  onClick={() => selectFilter(item)}
                   className={`${tabClass} border-transparent px-[12px] text-brand-white ${
                     selected ? "bg-brand" : ""
                   }`}

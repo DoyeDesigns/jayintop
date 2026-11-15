@@ -99,10 +99,41 @@ function slugify(value: string) {
     .slice(0, 80);
 }
 
+export function workCategoryParam(label: string) {
+  return slugify(label);
+}
+
+function categoryQuery(label: string) {
+  const slug = workCategoryParam(label);
+  return slug ? `?cat=${encodeURIComponent(slug)}` : "";
+}
+
+export function selectedWorkPath(filter?: { label: string; all?: boolean } | null) {
+  if (!filter || filter.all || !filter.label.trim()) return "/selected-work";
+  return `/selected-work${categoryQuery(filter.label)}`;
+}
+
+export function resolveFilterLabel(
+  cat: string | undefined,
+  filters: { label: string; all?: boolean }[],
+) {
+  const raw = cat?.trim() ?? "";
+  const fallback = filters.find((item) => item.all)?.label ?? filters[0]?.label ?? "";
+  if (!raw) return fallback;
+  const match = filters.find((item) => categoryMatches(item.label, raw));
+  return match?.label ?? fallback;
+}
+
+function categoryMatches(label: string, requested: string) {
+  const raw = requested.trim().toLowerCase();
+  if (!raw) return false;
+  return label.trim().toLowerCase() === raw || workCategoryParam(label) === workCategoryParam(requested) || workCategoryParam(label) === raw;
+}
+
 export function workPath(item: Pick<WorkItem, "id" | "slug">, category?: string) {
   const path = `/selected-work/${item.slug || item.id}`;
   const cat = category?.trim();
-  return cat ? `${path}?cat=${encodeURIComponent(cat)}` : path;
+  return cat ? `${path}${categoryQuery(cat)}` : path;
 }
 
 export function publishedWork(content: AdminContent): WorkItem[] {
@@ -152,7 +183,7 @@ export type WorkNavLink =
   | { kind: "category"; label: string; href: string };
 
 function categoryHref(label: string) {
-  return `/selected-work?cat=${encodeURIComponent(label)}`;
+  return selectedWorkPath({ label });
 }
 
 export function workCategoryLabels(filters: { label: string; all?: boolean }[]) {
@@ -174,10 +205,9 @@ export function resolveWorkCategory(
   categories: string[],
   requested?: string,
 ) {
-  const wanted = requested?.trim().toLowerCase();
-  if (wanted && matchesWorkFilter(item, requested!.trim(), false)) {
-    const named = categories.find((label) => label.toLowerCase() === wanted);
-    if (named) return named;
+  if (requested?.trim()) {
+    const named = categories.find((label) => categoryMatches(label, requested));
+    if (named && matchesWorkFilter(item, named, false)) return named;
   }
   for (const name of itemCategoryNames(item)) {
     const named = categories.find((label) => label.toLowerCase() === name.toLowerCase());
