@@ -23,6 +23,7 @@ export function ContentImage({
   const resolved = mediaSrc(src);
   const uploaded = resolved.startsWith("data:") || resolved.startsWith("blob:");
   const plain = uploaded || resolved === PLACEHOLDER_IMAGE || resolved.endsWith(".svg");
+  const remote = resolved.startsWith("https://") || resolved.startsWith("http://");
 
   if (plain && fill) {
     return (
@@ -52,6 +53,7 @@ export function ContentImage({
         src={resolved}
         alt={alt}
         fill
+        unoptimized={remote}
         priority={priority}
         sizes={sizes}
         className={className}
@@ -65,6 +67,7 @@ export function ContentImage({
       alt={alt}
       width={width ?? 0}
       height={height ?? 0}
+      unoptimized={remote}
       className={className}
     />
   );

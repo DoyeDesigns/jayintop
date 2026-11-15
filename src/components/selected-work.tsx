@@ -171,7 +171,7 @@ export function SelectedWork({
         ref={listRef}
         className={
           logoGrid
-            ? "mt-8 grid grid-cols-3 gap-3 md:gap-6"
+            ? "mt-8 grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-6"
             : "mt-8 flex flex-col gap-12"
         }
       >

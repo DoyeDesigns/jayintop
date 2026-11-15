@@ -638,7 +638,10 @@ export function visibleFilterLabels(filters: WorkFilterItem[]) {
 function normalizeAbout(about: AdminContent["about"]): AdminContent["about"] {
   return {
     ...about,
-    sections: about.sections.map((section) => ({ ...section })),
+    sections: about.sections.map((section, index) => ({
+      ...section,
+      media: index === 1 ? null : section.media,
+    })),
   };
 }
 

@@ -96,11 +96,6 @@ function parseJsonField(doc: FirestoreDoc) {
   }
 }
 
-function siteRecord(content: AdminContent) {
-  const { cases, ...site } = content;
-  return { ...site, caseIds: cases.map((item) => item.id) };
-}
-
 function assembleContent(site: unknown, cases: CaseItem[], updatedAt: string): AdminContent {
   const parsed = site && typeof site === "object" ? (site as Partial<AdminContent>) : {};
   return mergeContent(defaultContent(), {
@@ -160,8 +155,20 @@ export async function readCmsState(): Promise<{ content: AdminContent; split: bo
   const payload = parseJsonField(siteDoc);
 
   if (schema === SCHEMA) {
-    const cases = await loadCases(caseIdsFromPayload(payload));
-    return { content: assembleContent(payload, cases, updatedAt), split: true };
+    const caseIds = caseIdsFromPayload(payload);
+    const embedded = Array.isArray((payload as { cases?: unknown })?.cases)
+      ? ((payload as { cases: CaseItem[] }).cases)
+      : [];
+    try {
+      const cases = await loadCases(caseIds);
+      return { content: assembleContent(payload, cases, updatedAt), split: true };
+    } catch (error) {
+      if (!embedded.length) throw error;
+      return {
+        content: assembleContent({ ...payload, cases: undefined }, embedded, updatedAt || ""),
+        split: false,
+      };
+    }
   }
 
   const legacy = payload && typeof payload === "object" ? (payload as Partial<AdminContent>) : {};
@@ -205,56 +212,12 @@ async function patchOrCreateSite(fields: Record<string, FirestoreValue>, token: 
 async function writeSiteDoc(content: AdminContent, token: string) {
   await patchOrCreateSite(
     {
-      json: { stringValue: JSON.stringify(siteRecord(content)) },
+      json: { stringValue: JSON.stringify(content) },
       updatedAt: { stringValue: content.updatedAt },
-      schema: { stringValue: SCHEMA },
+      schema: { stringValue: "embedded-v1" },
     },
     token,
   );
-}
-
-async function upsertCaseDoc(item: CaseItem, order: number, updatedAt: string, token: string) {
-  const payload = JSON.stringify({
-    fields: {
-      json: { stringValue: JSON.stringify(item) },
-      updatedAt: { stringValue: updatedAt },
-      order: { integerValue: String(order) },
-    },
-  });
-  const mask = "updateMask.fieldPaths=json&updateMask.fieldPaths=updatedAt&updateMask.fieldPaths=order";
-  const patched = await fetch(`${caseDocUrl(item.id)}?${mask}`, {
-    method: "PATCH",
-    headers: authHeaders(token),
-    body: payload,
-    cache: "no-store",
-  });
-  if (patched.ok) return;
-
-  const patchMessage = await errorMessage(patched);
-  const missingDocument = patched.status === 404 && !patchMessage.toLowerCase().includes("does not exist");
-  if (!missingDocument) throw new Error(explainFirebaseFailure(patchMessage));
-
-  const created = await fetch(
-    `${contentCollectionUrl()}?documentId=${encodeURIComponent(caseDocId(item.id))}`,
-    {
-      method: "POST",
-      headers: authHeaders(token),
-      body: payload,
-      cache: "no-store",
-    },
-  );
-  if (created.ok) return;
-  throw new Error(explainFirebaseFailure(await errorMessage(created)));
-}
-
-async function deleteCaseDoc(id: string, token: string) {
-  const response = await fetch(caseDocUrl(id), {
-    method: "DELETE",
-    headers: authHeaders(token),
-    cache: "no-store",
-  });
-  if (response.ok || response.status === 404) return;
-  throw new Error(explainFirebaseFailure(await errorMessage(response)));
 }
 
 function assertFresh(live: AdminContent, expectedUpdatedAt: string) {
@@ -268,33 +231,16 @@ export async function writeCmsContent(
   token: string,
   expectedUpdatedAt: string,
 ) {
-  const { content: live, split } = await readCmsState();
+  const { content: live } = await readCmsState();
   assertFresh(live, expectedUpdatedAt);
 
   const now = new Date().toISOString();
   const next = { ...content, updatedAt: now };
-  const previous = new Map(live.cases.map((item, index) => [item.id, { item, index }]));
-
-  for (const [index, item] of next.cases.entries()) {
-    const prior = previous.get(item.id);
-    const unchanged =
-      split &&
-      prior &&
-      prior.index === index &&
-      JSON.stringify(prior.item) === JSON.stringify(item);
-    if (!unchanged) await upsertCaseDoc(item, index, now, token);
-  }
-
-  const keep = new Set(next.cases.map((item) => item.id));
-  for (const item of live.cases) {
-    if (!keep.has(item.id)) await deleteCaseDoc(item.id, token);
-  }
-
   await writeSiteDoc(next, token);
 }
 
 export async function deleteCmsCase(id: string, token: string, expectedUpdatedAt: string) {
-  const { content: live, split } = await readCmsState();
+  const { content: live } = await readCmsState();
   assertFresh(live, expectedUpdatedAt);
   const now = new Date().toISOString();
   const next: AdminContent = {
@@ -303,11 +249,6 @@ export async function deleteCmsCase(id: string, token: string, expectedUpdatedAt
     updatedAt: now,
   };
 
-  await deleteCaseDoc(id, token);
-  for (const [index, item] of next.cases.entries()) {
-    const priorIndex = live.cases.findIndex((entry) => entry.id === item.id);
-    if (!split || priorIndex !== index) await upsertCaseDoc(item, index, now, token);
-  }
   await writeSiteDoc(next, token);
 }
 

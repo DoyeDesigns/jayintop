@@ -29,8 +29,8 @@ export default async function AboutPage() {
   const { about, testimonials } = await readSiteContent();
   const lead = about.sections.slice(0, 2);
   const rest = about.sections.slice(2);
-  const portrait = about.sections.find((section) => section.media)?.media;
-  const sideImage = rest.find((section) => section.media)?.media;
+  const portrait = about.sections[0]?.media?.src ? about.sections[0].media : null;
+  const sideImage = rest.find((section) => section.media?.src)?.media ?? null;
   const quotes = testimonials
     .filter((item) => item.quote.trim())
     .map(({ quote, name, role }) => ({ quote, name, role }));
@@ -68,10 +68,10 @@ export default async function AboutPage() {
                 <h2 className={`${sectionTitle} text-brand-white`}>{section.title}</h2>
               ) : null}
               {section.body.trim() ? (
-              <RichParagraphs
-                text={section.body}
-                className={`${body} mt-4 flex flex-col gap-4 text-brand-white`}
-              />
+                <RichParagraphs
+                  text={section.body}
+                  className={`${body} mt-4 flex flex-col gap-4 text-brand-white`}
+                />
               ) : null}
             </section>
           ))}

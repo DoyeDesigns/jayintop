@@ -81,11 +81,13 @@ export function AboutEditor() {
               value={section.body}
               onChange={(value) => sections.set(index, { ...section, body: value })}
             />
-            <ImageField
-              label="Image"
-              value={section.media}
-              onChange={(media) => sections.set(index, { ...section, media })}
-            />
+            {index === 1 ? null : (
+              <ImageField
+                label="Image"
+                value={section.media}
+                onChange={(media) => sections.set(index, { ...section, media })}
+              />
+            )}
           </div>
         ))}
         <AddButton

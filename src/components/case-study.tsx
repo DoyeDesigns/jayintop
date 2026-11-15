@@ -74,7 +74,7 @@ export function CaseStudy({
 }) {
   return (
     <article className="flex flex-col gap-10">
-      {/* {project.image || project.imageMobile ? (
+      {project.image || project.imageMobile ? (
         <div className="relative hidden aspect-square overflow-hidden rounded-lg md:aspect-[1380/640]">
           <ContentImage
             src={project.imageMobile || project.image}
@@ -93,13 +93,13 @@ export function CaseStudy({
             className="hidden object-cover md:block"
           />
         </div>
-      ) : null} */}
+      ) : null}
 
       {project.sections.map((section, index) => (
-        <section key={section.title} className="flex flex-col gap-6">
+        <section key={`${index}-${section.title}`} className="flex flex-col gap-6">
           {index === 0 ? (
             <>
-              <div className="flex flex-col gap-4 text-left md:flex-row md:items-end md:justify-between md:gap-10">
+              <div className="flex flex-col gap-4 text-left sm:flex-row md:items-end sm:justify-between sm:gap-10">
                 <h1 className={`${heading} max-w-[720px]`}>{section.title}</h1>
                 {project.liveUrl?.trim() && !project.liveHidden ? (
                   <a
