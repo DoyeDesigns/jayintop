@@ -8,11 +8,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import {
-  deletePersistedCase,
-  loadSiteContent,
-  saveSiteContent,
-} from "@/app/admin/content-actions";
+import { loadSiteContent, saveSiteContent } from "@/app/admin/content-actions";
 import {
   defaultContent,
   getAt,
@@ -25,6 +21,7 @@ type AdminContentContextValue = {
   dirty: boolean;
   ready: boolean;
   saving: boolean;
+  localFile: boolean;
   status: string | null;
   setPath: (path: string, value: unknown) => void;
   mutate: (recipe: (draft: AdminContent) => void) => void;
@@ -45,6 +42,7 @@ export function AdminContentProvider({ children }: { children: ReactNode }) {
   const [saved, setSaved] = useState("");
   const [ready, setReady] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [localFile, setLocalFile] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
   const contentRef = useRef(content);
   contentRef.current = content;
@@ -58,6 +56,7 @@ export function AdminContentProvider({ children }: { children: ReactNode }) {
         return;
       }
       applyLive(setContent, setSaved, result.content);
+      setLocalFile(result.localFile);
       setReady(true);
     });
     return () => {
@@ -107,7 +106,11 @@ export function AdminContentProvider({ children }: { children: ReactNode }) {
 
     setSaving(true);
     setStatus(null);
-    const result = await deletePersistedCase(id, contentRef.current.updatedAt);
+    const next = {
+      ...contentRef.current,
+      cases: contentRef.current.cases.filter((item) => item.id !== id),
+    };
+    const result = await saveSiteContent(next);
     setSaving(false);
     if (!result.ok) {
       if ("content" in result && result.content) {
@@ -140,7 +143,11 @@ export function AdminContentProvider({ children }: { children: ReactNode }) {
         "Reset all fields to the starter text? Click Save to publish that reset.",
       )
     ) {
-      setContent({ ...defaultContent(), updatedAt: contentRef.current?.updatedAt ?? "" });
+      setContent({
+        ...defaultContent(),
+        updatedAt: contentRef.current?.updatedAt ?? "",
+        revision: contentRef.current?.revision ?? "",
+      });
     }
   };
 
@@ -151,6 +158,7 @@ export function AdminContentProvider({ children }: { children: ReactNode }) {
         dirty,
         ready,
         saving,
+        localFile,
         status: ready ? status : (status ?? "Loading live content…"),
         setPath,
         mutate,

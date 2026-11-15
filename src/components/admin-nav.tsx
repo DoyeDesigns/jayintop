@@ -151,14 +151,16 @@ function AccountCard({ email, name }: { email: string; name: string | null }) {
 }
 
 function SaveBar() {
-  const { dirty, ready, saving, status, save } = useAdminContent();
+  const { dirty, ready, saving, localFile, status, save } = useAdminContent();
   const label = saving ? "Saving" : "Save";
+  const note = saving ? "Saving…" : dirty ? "Unsaved changes" : (status ?? "No changes yet");
 
   return (
     <div className="sticky top-16 z-30 border-b border-white/10 bg-[#1C1C1C] px-4 py-3 md:top-0">
       <div className="flex items-center justify-end gap-4">
         <p className="font-inter text-[14px] leading-[20px] font-normal text-[#94979C]">
-          {saving ? "Saving…" : dirty ? "Unsaved changes" : (status ?? "No changes yet")}
+          {localFile ? "Editing the local file, not Firebase. " : ""}
+          {note}
         </p>
         <button
           type="button"
@@ -171,6 +173,18 @@ function SaveBar() {
       </div>
     </div>
   );
+}
+
+function EditorGate({ children }: { children: ReactNode }) {
+  const { ready, status } = useAdminContent();
+  if (!ready) {
+    return (
+      <p className="px-4 py-8 font-inter text-[14px] leading-[20px] text-[#94979C]">
+        {status ?? "Loading live content…"}
+      </p>
+    );
+  }
+  return children;
 }
 
 export function AdminShell({
@@ -269,7 +283,7 @@ export function AdminShell({
 
       <div className="min-h-dvh min-w-0 flex-1 pt-16 md:pt-0">
         <SaveBar />
-        {children}
+        <EditorGate>{children}</EditorGate>
       </div>
     </div>
   );

@@ -170,6 +170,8 @@ export type AdminContent = {
   testimonials: TestimonialItem[];
   cases: CaseItem[];
   updatedAt: string;
+  /** Firestore document updateTime loaded with this copy. Empty means the document was missing. */
+  revision: string;
 };
 
 export function emptyBlock(type: ContentBlock["type"]): ContentBlock {
@@ -261,6 +263,7 @@ export function defaultContent(): AdminContent {
     testimonials: [],
     cases: [],
     updatedAt: "",
+    revision: "",
   };
 }
 

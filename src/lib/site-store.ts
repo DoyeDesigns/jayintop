@@ -1,10 +1,10 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { cache } from "react";
 import path from "node:path";
 import { getAdminIdToken } from "@/lib/admin-session";
 import { defaultContent, mergeContent, type AdminContent } from "@/lib/admin-content";
 import { storeContentImages } from "@/lib/cloudinary";
 import {
-  deleteCmsCase,
   hasFirebaseEnv,
   readCmsContent,
   StaleContentError,
@@ -12,15 +12,8 @@ import {
   writeFirestoreMessage,
 } from "@/lib/firebase-data";
 
-const mockCaseTitles = new Set(["magic", "frostflow", "gatewayshield", "lyflo"]);
-
-function withoutMockCases(content: AdminContent) {
-  return {
-    ...content,
-    cases: content.cases.filter(
-      (item) => !mockCaseTitles.has(item.title.trim().toLowerCase()),
-    ),
-  };
+export function usesLocalContentFile() {
+  return !hasFirebaseEnv();
 }
 
 const contentPath = path.join(process.cwd(), "data", "site-content.json");
@@ -55,10 +48,17 @@ async function writeLocalFile(filePath: string, contents: string) {
 async function readFileContent() {
   try {
     const raw = await readFile(contentPath, "utf8");
-    return withoutMockCases(mergeContent(defaultContent(), JSON.parse(raw)));
+    const content = mergeContent(defaultContent(), JSON.parse(raw));
+    return { ...content, revision: content.updatedAt || "local" };
   } catch {
     return null;
   }
+}
+
+function contentSnapshot(content: AdminContent) {
+  const normalized = mergeContent(defaultContent(), content);
+  const { updatedAt: _updatedAt, revision: _revision, ...rest } = normalized;
+  return JSON.stringify(rest);
 }
 
 function imageSrcs(content: AdminContent) {
@@ -85,63 +85,44 @@ function hasDataImage(content: AdminContent) {
 }
 
 function liveMatchesWritten(written: AdminContent, live: AdminContent) {
-  if (written.cases.length !== live.cases.length) return false;
-  if (written.cases.some((item, index) => item.id !== live.cases[index]?.id)) return false;
-  const writtenSrcs = imageSrcs(written);
-  const liveSrcs = imageSrcs(live);
-  return writtenSrcs.length === liveSrcs.length && writtenSrcs.every((src, index) => src === liveSrcs[index]);
+  return contentSnapshot(written) === contentSnapshot(live);
 }
 
 export { StaleContentError };
 
-export async function readSiteContent() {
-  if (hasFirebaseEnv()) {
-    return withoutMockCases(await readCmsContent());
-  }
+export const readSiteContent = cache(async function readSiteContent() {
+  if (hasFirebaseEnv()) return readCmsContent();
   const file = await readFileContent();
   return file ?? defaultContent();
-}
+});
 
 export async function writeSiteContent(content: AdminContent) {
-  const cleaned = withoutMockCases(content);
-  const stored = await storeContentImages(cleaned);
+  const stored = await storeContentImages(content);
   if (hasDataImage(stored)) {
     throw new Error("An image is still a local data URL. Upload it before saving.");
   }
 
   if (!hasFirebaseEnv()) {
-    stored.updatedAt = new Date().toISOString();
-    await writeLocalFile(contentPath, JSON.stringify(stored));
-    return stored;
-  }
-
-  const token = await getAdminIdToken();
-  if (!token) throw new Error("Sign in again.");
-
-  await writeCmsContent(stored, token, stored.updatedAt);
-  const live = withoutMockCases(await readCmsContent());
-  if (!liveMatchesWritten({ ...stored, updatedAt: live.updatedAt }, live)) {
-    throw new Error("Live Firebase data does not match what was saved.");
-  }
-  return live;
-}
-
-export async function deleteSiteCase(id: string, expectedUpdatedAt: string) {
-  if (!hasFirebaseEnv()) {
-    const current = await readSiteContent();
-    const next = {
-      ...current,
-      cases: current.cases.filter((item) => item.id !== id),
-      updatedAt: new Date().toISOString(),
-    };
-    await writeLocalFile(contentPath, JSON.stringify(next));
+    const current = await readFileContent();
+    if (current && current.revision !== content.revision) {
+      throw new StaleContentError(current);
+    }
+    const now = new Date().toISOString();
+    const { revision: _revision, ...body } = stored;
+    const next = { ...body, updatedAt: now, revision: now };
+    await writeLocalFile(contentPath, JSON.stringify({ ...body, updatedAt: now }));
     return next;
   }
 
   const token = await getAdminIdToken();
   if (!token) throw new Error("Sign in again.");
-  await deleteCmsCase(id, token, expectedUpdatedAt);
-  return withoutMockCases(await readCmsContent());
+
+  await writeCmsContent(stored, token, stored.revision);
+  const live = await readCmsContent();
+  if (!liveMatchesWritten(stored, live)) {
+    throw new Error("Live Firebase data does not match what was saved.");
+  }
+  return live;
 }
 
 export async function saveContactMessage(message: ContactMessage) {

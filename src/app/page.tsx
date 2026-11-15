@@ -177,7 +177,7 @@ export default async function Home() {
         eyebrow={home.beliefEyebrow}
         lead={home.beliefLead}
         paragraphs={home.beliefBody.split(/\n\s*\n/).filter(Boolean)}
-        imageSrc={portraitSrc}
+        imageSrc={beliefImageSrc}
       />
       <HomeUseCases
         categories={categoryItems(content.work.filters, home.services, works)}

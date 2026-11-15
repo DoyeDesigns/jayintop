@@ -2,8 +2,6 @@ import { defaultContent, mergeContent, type AdminContent, type CaseItem } from "
 
 export type BackendState = "ready" | "missing" | "denied";
 
-const SCHEMA = "split-v1";
-
 export class StaleContentError extends Error {
   live: AdminContent;
 
@@ -16,11 +14,11 @@ export class StaleContentError extends Error {
 
 type FirestoreValue = {
   stringValue?: string;
-  integerValue?: string;
 };
 
 type FirestoreDoc = {
   name?: string;
+  updateTime?: string;
   fields?: Record<string, FirestoreValue>;
 };
 
@@ -44,14 +42,6 @@ function siteDocUrl() {
 
 function contentCollectionUrl() {
   return `${documentsRoot()}/content`;
-}
-
-function caseDocId(id: string) {
-  return `case_${id}`;
-}
-
-function caseDocUrl(id: string) {
-  return `${contentCollectionUrl()}/${encodeURIComponent(caseDocId(id))}`;
 }
 
 async function errorMessage(response: Response) {
@@ -96,85 +86,98 @@ function parseJsonField(doc: FirestoreDoc) {
   }
 }
 
-function assembleContent(site: unknown, cases: CaseItem[], updatedAt: string): AdminContent {
+function assembleContent(
+  site: unknown,
+  cases: CaseItem[],
+  updatedAt: string,
+  revision: string,
+): AdminContent {
   const parsed = site && typeof site === "object" ? (site as Partial<AdminContent>) : {};
-  return mergeContent(defaultContent(), {
-    ...parsed,
-    cases,
-    updatedAt,
-  });
+  return {
+    ...mergeContent(defaultContent(), {
+      ...parsed,
+      cases,
+      updatedAt,
+    }),
+    revision,
+  };
+}
+
+function revisionOf(doc: FirestoreDoc, updatedAt: string) {
+  if (doc.updateTime) return doc.updateTime;
+  if (updatedAt) return `updatedAt:${updatedAt}`;
+  return "present";
+}
+
+function isConflict(status: number, message: string) {
+  const text = message.toLowerCase();
+  return (
+    status === 409 ||
+    status === 412 ||
+    text.includes("precondition") ||
+    text.includes("update_time") ||
+    text.includes("already exists")
+  );
+}
+
+function isTransientNetworkError(error: unknown) {
+  const cause =
+    error && typeof error === "object" && "cause" in error
+      ? (error as { cause?: { code?: string } }).cause
+      : undefined;
+  const code = cause?.code ?? "";
+  return (
+    code === "EAI_AGAIN" ||
+    code === "ENOTFOUND" ||
+    code === "ECONNRESET" ||
+    code === "ETIMEDOUT" ||
+    code === "UND_ERR_CONNECT_TIMEOUT" ||
+    code === "UND_ERR_SOCKET"
+  );
+}
+
+async function fetchFresh(url: string, init?: RequestInit) {
+  let last: unknown;
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    try {
+      return await fetch(url, { ...init, cache: "no-store" });
+    } catch (error) {
+      last = error;
+      if (!isTransientNetworkError(error) || attempt === 2) break;
+      await new Promise((resolve) => setTimeout(resolve, 300 * (attempt + 1)));
+    }
+  }
+  if (isTransientNetworkError(last)) {
+    throw new Error("Firestore did not respond. Check the network connection and reload.");
+  }
+  throw last;
 }
 
 async function getSiteDoc() {
-  const response = await fetch(siteDocUrl(), { cache: "no-store" });
+  const response = await fetchFresh(siteDocUrl());
   if (response.status === 404) return null;
   if (!response.ok) {
     throw new Error(explainFirebaseFailure(await errorMessage(response)));
   }
   return (await response.json()) as FirestoreDoc;
-}
-
-async function getCaseDoc(id: string) {
-  const response = await fetch(caseDocUrl(id), { cache: "no-store" });
-  if (response.status === 404) return null;
-  if (!response.ok) {
-    throw new Error(explainFirebaseFailure(await errorMessage(response)));
-  }
-  return (await response.json()) as FirestoreDoc;
-}
-
-function caseFromDoc(doc: FirestoreDoc): CaseItem | null {
-  const parsed = parseJsonField(doc);
-  if (!parsed || typeof parsed !== "object" || !("id" in parsed)) return null;
-  return parsed as CaseItem;
-}
-
-function caseIdsFromPayload(payload: unknown) {
-  if (!payload || typeof payload !== "object") return [];
-  const ids = (payload as { caseIds?: unknown }).caseIds;
-  return Array.isArray(ids) ? ids.filter((id): id is string => typeof id === "string" && id.length > 0) : [];
-}
-
-async function loadCases(ids: string[]) {
-  const docs = await Promise.all(ids.map((id) => getCaseDoc(id)));
-  return docs.map((doc, index) => {
-    const id = ids[index];
-    if (!doc) throw new Error(`Case study ${id} is missing from Firebase.`);
-    const item = caseFromDoc(doc);
-    if (!item) throw new Error(`Case study ${id} is not valid JSON.`);
-    return item;
-  });
 }
 
 export async function readCmsState(): Promise<{ content: AdminContent; split: boolean }> {
   const siteDoc = await getSiteDoc();
   if (!siteDoc) return { content: defaultContent(), split: false };
 
-  const schema = siteDoc.fields?.schema?.stringValue ?? "";
   const updatedAt = siteDoc.fields?.updatedAt?.stringValue ?? "";
   const payload = parseJsonField(siteDoc);
-
-  if (schema === SCHEMA) {
-    const caseIds = caseIdsFromPayload(payload);
-    const embedded = Array.isArray((payload as { cases?: unknown })?.cases)
-      ? ((payload as { cases: CaseItem[] }).cases)
-      : [];
-    try {
-      const cases = await loadCases(caseIds);
-      return { content: assembleContent(payload, cases, updatedAt), split: true };
-    } catch (error) {
-      if (!embedded.length) throw error;
-      return {
-        content: assembleContent({ ...payload, cases: undefined }, embedded, updatedAt || ""),
-        split: false,
-      };
-    }
-  }
-
-  const legacy = payload && typeof payload === "object" ? (payload as Partial<AdminContent>) : {};
-  const cases = Array.isArray(legacy.cases) ? legacy.cases : [];
+  const stored = payload && typeof payload === "object" ? (payload as Partial<AdminContent>) : {};
+  const cases = Array.isArray(stored.cases) ? stored.cases : [];
+  const storedAt = updatedAt || stored.updatedAt || "";
   return {
-    content: assembleContent({ ...legacy, cases: undefined }, cases, updatedAt || legacy.updatedAt || ""),
+    content: assembleContent(
+      { ...stored, cases: undefined },
+      cases,
+      storedAt,
+      revisionOf(siteDoc, storedAt),
+    ),
     split: false,
   };
 }
@@ -183,73 +186,77 @@ export async function readCmsContent() {
   return (await readCmsState()).content;
 }
 
-async function patchOrCreateSite(fields: Record<string, FirestoreValue>, token: string) {
-  const payload = JSON.stringify({ fields });
-  const mask =
-    "updateMask.fieldPaths=json&updateMask.fieldPaths=updatedAt&updateMask.fieldPaths=schema";
-  const patched = await fetch(`${siteDocUrl()}?${mask}`, {
-    method: "PATCH",
-    headers: authHeaders(token),
-    body: payload,
-    cache: "no-store",
-  });
-  if (patched.ok) return;
+const fieldMask =
+  "updateMask.fieldPaths=json&updateMask.fieldPaths=updatedAt&updateMask.fieldPaths=schema";
 
-  const patchMessage = await errorMessage(patched);
-  const missingDocument = patched.status === 404 && !patchMessage.toLowerCase().includes("does not exist");
-  if (!missingDocument) throw new Error(explainFirebaseFailure(patchMessage));
+function documentFields(content: AdminContent) {
+  const { revision: _revision, ...body } = content;
+  return {
+    json: { stringValue: JSON.stringify(body) },
+    updatedAt: { stringValue: content.updatedAt },
+    schema: { stringValue: "embedded-v1" },
+  };
+}
 
+async function createSiteDoc(fields: Record<string, FirestoreValue>, token: string) {
   const created = await fetch(`${contentCollectionUrl()}?documentId=site`, {
     method: "POST",
     headers: authHeaders(token),
-    body: payload,
+    body: JSON.stringify({ fields }),
     cache: "no-store",
   });
   if (created.ok) return;
-  throw new Error(explainFirebaseFailure(await errorMessage(created)));
-}
-
-async function writeSiteDoc(content: AdminContent, token: string) {
-  await patchOrCreateSite(
-    {
-      json: { stringValue: JSON.stringify(content) },
-      updatedAt: { stringValue: content.updatedAt },
-      schema: { stringValue: "embedded-v1" },
-    },
-    token,
-  );
-}
-
-function assertFresh(live: AdminContent, expectedUpdatedAt: string) {
-  if (live.updatedAt !== expectedUpdatedAt) {
-    throw new StaleContentError(live);
+  const message = await errorMessage(created);
+  if (isConflict(created.status, message)) {
+    throw new StaleContentError(await readCmsContent());
   }
+  throw new Error(explainFirebaseFailure(message));
+}
+
+async function writeSiteDoc(content: AdminContent, token: string, expectedRevision: string) {
+  const fields = documentFields(content);
+
+  if (!expectedRevision) {
+    const existing = await getSiteDoc();
+    if (existing) throw new StaleContentError(await readCmsContent());
+    await createSiteDoc(fields, token);
+    return;
+  }
+
+  const updateTime = /^\d{4}-\d{2}-\d{2}T/.test(expectedRevision) ? expectedRevision : "";
+  if (!updateTime) {
+    const live = await readCmsContent();
+    if (live.revision !== expectedRevision) throw new StaleContentError(live);
+  }
+
+  const precondition = updateTime
+    ? `&currentDocument.updateTime=${encodeURIComponent(updateTime)}`
+    : "";
+  const patched = await fetch(
+    `${siteDocUrl()}?${fieldMask}${precondition}`,
+    {
+      method: "PATCH",
+      headers: authHeaders(token),
+      body: JSON.stringify({ fields }),
+      cache: "no-store",
+    },
+  );
+  if (patched.ok) return;
+
+  const message = await errorMessage(patched);
+  if (isConflict(patched.status, message) || patched.status === 404) {
+    throw new StaleContentError(await readCmsContent());
+  }
+  throw new Error(explainFirebaseFailure(message));
 }
 
 export async function writeCmsContent(
   content: AdminContent,
   token: string,
-  expectedUpdatedAt: string,
+  expectedRevision: string,
 ) {
-  const { content: live } = await readCmsState();
-  assertFresh(live, expectedUpdatedAt);
-
   const now = new Date().toISOString();
-  const next = { ...content, updatedAt: now };
-  await writeSiteDoc(next, token);
-}
-
-export async function deleteCmsCase(id: string, token: string, expectedUpdatedAt: string) {
-  const { content: live } = await readCmsState();
-  assertFresh(live, expectedUpdatedAt);
-  const now = new Date().toISOString();
-  const next: AdminContent = {
-    ...live,
-    cases: live.cases.filter((item) => item.id !== id),
-    updatedAt: now,
-  };
-
-  await writeSiteDoc(next, token);
+  await writeSiteDoc({ ...content, updatedAt: now }, token, expectedRevision);
 }
 
 export async function checkFirestore(): Promise<BackendState> {

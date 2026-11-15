@@ -4,14 +4,18 @@ import { getAdminSession } from "@/lib/admin-session";
 import { defaultContent, mergeContent, type AdminContent, type AdminImage } from "@/lib/admin-content";
 import { checkCloudinary, createDirectUpload, uploadStoredImage } from "@/lib/cloudinary";
 import { checkFirestore } from "@/lib/firebase-data";
-import { deleteSiteCase, readSiteContent, StaleContentError, writeSiteContent } from "@/lib/site-store";
+import { readSiteContent, StaleContentError, usesLocalContentFile, writeSiteContent } from "@/lib/site-store";
 
 export async function loadSiteContent() {
   const session = await getAdminSession();
   if (!session) return { ok: false as const, error: "Sign in again." };
 
   try {
-    return { ok: true as const, content: await readSiteContent() };
+    return {
+      ok: true as const,
+      content: await readSiteContent(),
+      localFile: usesLocalContentFile(),
+    };
   } catch (error) {
     return {
       ok: false as const,
@@ -40,29 +44,6 @@ export async function saveSiteContent(content: AdminContent) {
     return {
       ok: false as const,
       error: error instanceof Error ? error.message : "This change could not be saved.",
-    };
-  }
-}
-
-export async function deletePersistedCase(id: string, expectedUpdatedAt: string) {
-  const session = await getAdminSession();
-  if (!session) return { ok: false as const, error: "Sign in again." };
-
-  try {
-    const content = await deleteSiteCase(id, expectedUpdatedAt);
-    return { ok: true as const, content };
-  } catch (error) {
-    if (error instanceof StaleContentError) {
-      return {
-        ok: false as const,
-        error: error.message,
-        content: error.live,
-        stale: true as const,
-      };
-    }
-    return {
-      ok: false as const,
-      error: error instanceof Error ? error.message : "That case study could not be deleted.",
     };
   }
 }

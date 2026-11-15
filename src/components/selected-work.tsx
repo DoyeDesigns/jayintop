@@ -73,7 +73,7 @@ export function SelectedWork({
   const useMenu = options.length > 4;
 
   return (
-    <div className="mt-10">
+    <div>
       <div ref={sentinelRef} aria-hidden className="h-px" />
       <div
         ref={barRef}
@@ -136,27 +136,18 @@ export function SelectedWork({
 
           <nav
             aria-label="Filter projects"
-            className={`${useMenu ? "hidden" : "flex"} flex-wrap justify-center gap-6 overflow-x-auto md:flex md:flex-nowrap ${
-              stuck ? "md:justify-start" : "md:justify-center"
-            }`}
+            className={`${useMenu ? "hidden" : "flex"} flex-wrap justify-center gap-6 overflow-x-auto md:flex md:flex-nowrap md:justify-start`}
           >
             {options.map((item) => {
               const selected = filter === item.label;
-              const stuckActive = stuck && selected;
               return (
                 <button
                   key={item.label}
                   type="button"
                   aria-pressed={selected}
                   onClick={() => setFilter(item.label)}
-                  className={`${tabClass} ${
-                    stuck
-                      ? stuckActive
-                        ? "border-transparent bg-brand px-[12px] text-brand-white"
-                        : "border-transparent px-[12px] text-brand-white"
-                      : selected
-                        ? "border-brand pr-[12px] pl-0 text-brand-white"
-                        : "border-transparent pr-[12px] pl-0 text-brand-white"
+                  className={`${tabClass} border-transparent px-[12px] text-brand-white ${
+                    selected ? "bg-brand" : ""
                   }`}
                 >
                   {item.label}
@@ -180,27 +171,36 @@ export function SelectedWork({
             <>
               <div
                 className={`relative w-full overflow-hidden rounded-lg bg-[#1A1A1A] ${
-                  logoGrid
-                    ? "aspect-square"
-                    : "aspect-square md:aspect-[1380/640] lg:aspect-[1380/680] md:max-w-none"
+                  logoGrid ? "aspect-square" : ""
                 }`}
               >
-                <ContentImage
-                  src={item.imageMobile || item.image}
-                  alt={logoGrid ? item.title : ""}
-                  fill
-                  sizes={logoGrid ? "(min-width: 768px) 33vw, 33vw" : "370px"}
-                  className={`object-cover ${logoGrid ? "" : "md:hidden"}`}
-                />
-                {logoGrid ? null : (
+                {logoGrid ? (
                   <ContentImage
-                    src={item.image}
-                    alt=""
+                    src={item.imageMobile || item.image}
+                    alt={item.title}
                     fill
-                    height={640}
-                    sizes="1200px"
-                    className="hidden object-cover md:block"
+                    sizes="33vw"
+                    className="object-cover"
                   />
+                ) : (
+                  <>
+                    <ContentImage
+                      src={item.imageMobile || item.image}
+                      alt=""
+                      width={1280}
+                      height={640}
+                      sizes="370px"
+                      className="block h-auto w-full md:hidden"
+                    />
+                    <ContentImage
+                      src={item.image}
+                      alt=""
+                      width={1280}
+                      height={640}
+                      sizes="1200px"
+                      className="hidden h-auto w-full md:block"
+                    />
+                  </>
                 )}
               </div>
               {logoGrid ? null : (

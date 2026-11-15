@@ -39,16 +39,21 @@ function VideoPlayer({ url, poster }: { url: string; poster?: string }) {
 function Frame({ image, alt }: { image: WorkImage; alt: string }) {
   return (
     <div
-      className={`relative overflow-hidden rounded-lg ${
-        image.span === "full" ? "aspect-[16/9] md:col-span-2" : "aspect-[4/3]"
+      className={`overflow-hidden rounded-lg bg-[#1A1A1A] ${
+        image.span === "full" ? "md:col-span-2" : ""
       }`}
     >
       <ContentImage
         src={image.src}
         alt={alt}
-        fill
-        sizes={image.span === "full" ? "(min-width: 768px) 1120px, 100vw" : "(min-width: 768px) 540px, 100vw"}
-        className="object-cover"
+        width={1600}
+        height={900}
+        sizes={
+          image.span === "full"
+            ? "(min-width: 768px) 1120px, 100vw"
+            : "(min-width: 768px) 540px, 100vw"
+        }
+        className="block h-auto w-full"
       />
     </div>
   );
@@ -75,7 +80,7 @@ export function CaseStudy({
   return (
     <article className="flex flex-col gap-10">
       {project.image || project.imageMobile ? (
-        <div className="relative hidden aspect-square overflow-hidden rounded-lg md:aspect-[1380/640]">
+        <div className="relative aspect-square overflow-hidden rounded-lg md:aspect-[1380/640]">
           <ContentImage
             src={project.imageMobile || project.image}
             alt=""
