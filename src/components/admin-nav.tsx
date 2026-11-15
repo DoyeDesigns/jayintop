@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronUp, X } from "lucide-react";
+import { ChevronUp, Loader2, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState, type ReactNode } from "react";
@@ -178,10 +178,19 @@ function SaveBar() {
 function EditorGate({ children }: { children: ReactNode }) {
   const { ready, status } = useAdminContent();
   if (!ready) {
+    const failed = Boolean(status && status !== "Loading live content…");
     return (
-      <p className="px-4 py-8 font-inter text-[14px] leading-[20px] text-[#94979C]">
-        {status ?? "Loading live content…"}
-      </p>
+      <div className="flex flex-1 items-center justify-center px-4 py-16">
+        {failed ? (
+          <p className="max-w-md text-center font-inter text-[14px] leading-[20px] text-[#94979C]">
+            {status}
+          </p>
+        ) : (
+          <div role="status" aria-label="Loading live content">
+            <Loader2 className="size-8 animate-spin text-brand" aria-hidden />
+          </div>
+        )}
+      </div>
     );
   }
   return children;
@@ -281,7 +290,7 @@ export function AdminShell({
         <AccountCard email={email} name={name} />
       </aside>
 
-      <div className="min-h-dvh min-w-0 flex-1 pt-16 md:pt-0">
+      <div className="flex min-h-dvh min-w-0 flex-1 flex-col pt-16 md:pt-0">
         <SaveBar />
         <EditorGate>{children}</EditorGate>
       </div>
